@@ -16,14 +16,13 @@ export function Header() {
   return (
     <header className="py-2 px-6 w-full border-b border-border/40 bg-secondary/30 backdrop-blur-sm">
       <div className="container mx-auto flex justify-between items-center">
-        <div className="flex items-center">
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity mr-auto">
-            <CodeSquare className="h-6 w-6 text-voiceback-500" />
-            <span className="font-bold text-lg bg-gradient-to-r from-voiceback-500 to-voiceback-400 bg-clip-text text-transparent tracking-tight">
-              VoiceBack
-            </span>
-          </Link>
-        </div>
+        <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <CodeSquare className="h-6 w-6 text-voiceback-500" />
+          <span className="font-bold text-lg bg-gradient-to-r from-voiceback-500 to-voiceback-400 bg-clip-text text-transparent tracking-tight">
+            VoiceBack
+          </span>
+        </Link>
+        
         <div className="flex items-center gap-3">
           {user ? (
             // Show user email and logout button when logged in
