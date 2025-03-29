@@ -10,7 +10,7 @@ type SupabaseContextType = {
   user: User | null;
   session: Session | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
   checkConnection: () => Promise<boolean>;
@@ -67,14 +67,25 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, fullName?: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({ email, password });
+      // Include user metadata with fullName
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            full_name: fullName
+          }
+        }
+      });
       
       if (error) {
         throw error;
       }
+      
+      console.log("Sign up successful:", data);
       
       toast({
         title: "Account created",

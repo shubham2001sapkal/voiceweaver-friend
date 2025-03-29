@@ -1,8 +1,13 @@
 
-import { CodeSquare } from "lucide-react";
+import { CodeSquare, LogIn, UserPlus } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { Button } from "./ui/button";
+import { Link } from "react-router-dom";
+import { useSupabase } from "@/context/SupabaseContext";
 
 export function Header() {
+  const { user } = useSupabase();
+
   return (
     <header className="py-4 px-6 w-full border-b border-border/40 bg-secondary/30 backdrop-blur-sm">
       <div className="container mx-auto flex justify-between items-center">
@@ -14,7 +19,44 @@ export function Header() {
             </span>
           </div>
         </div>
-        <ThemeToggle />
+        <div className="flex items-center gap-3">
+          {!user ? (
+            <>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                asChild
+                className="flex items-center gap-1.5"
+              >
+                <Link to="/signin">
+                  <LogIn className="h-4 w-4" />
+                  Sign In
+                </Link>
+              </Button>
+              <Button 
+                variant="default" 
+                size="sm" 
+                asChild
+                className="bg-voiceback-500 hover:bg-voiceback-600 text-white flex items-center gap-1.5"
+              >
+                <Link to="/signup">
+                  <UserPlus className="h-4 w-4" />
+                  Sign Up
+                </Link>
+              </Button>
+            </>
+          ) : (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {}}
+              className="flex items-center gap-1.5"
+            >
+              Profile
+            </Button>
+          )}
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );
