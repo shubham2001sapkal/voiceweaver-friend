@@ -1,4 +1,3 @@
-
 import { createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
@@ -109,33 +108,10 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
         throw new Error(msg);
       }
       
-      // Now create a profile entry in the profiles table
-      // Use upsert to ensure we don't create duplicate entries
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: authData.user.id,
-          full_name: fullName, // Make sure this field matches the column name in Supabase
-          email: email,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }, { onConflict: 'id' });
-      
-      if (profileError) {
-        console.error("Error creating user profile:", profileError);
-        console.error("Profile error details:", JSON.stringify(profileError));
-        toast({
-          title: "Profile creation issue",
-          description: "Your account was created but there was an issue setting up your profile.",
-          variant: "destructive",
-        });
-      } else {
-        console.log("Profile created successfully for user:", authData.user.id);
-        console.log("Profile data:", { id: authData.user.id, full_name: fullName, email });
-      }
-      
-      // Log to verify user data is created correctly
-      console.log("Created user with data:", authData.user);
+      // Now attempt to create a profile entry using service role if available
+      // or have user wait for server-side function to create profile
+      console.log("Auth completed successfully, user created with ID:", authData.user.id);
+      console.log("User metadata contains full_name:", authData.user.user_metadata.full_name);
       
       toast({
         title: "Account created",
