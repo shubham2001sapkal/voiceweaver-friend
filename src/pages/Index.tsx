@@ -1,6 +1,6 @@
 
 import { Header } from "@/components/Header";
-import { VoiceForm } from "@/components/VoiceForm";
+import { VoiceForm } from "@/components/ResponsiveVoiceForm";
 import { Footer } from "@/components/Footer";
 import { useEffect, useState, useRef } from "react";
 import { useToast } from "@/components/ui/use-toast";
@@ -59,22 +59,22 @@ const Index = () => {
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-gray-900">
       <Header />
       <main className="flex-1">
-        <div className="max-w-6xl mx-auto px-4 py-8 md:py-12">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 text-voiceback dark:text-primary">
+        <div className="max-w-6xl mx-auto px-4 py-6 md:py-12">
+          <div className="text-center mb-8 md:mb-12">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 md:mb-4 text-voiceback dark:text-primary">
               AI Voice Cloning
             </h1>
-            <p className="text-lg md:text-xl max-w-3xl mx-auto text-gray-600 dark:text-gray-300">
+            <p className="text-base md:text-lg lg:text-xl max-w-3xl mx-auto text-gray-600 dark:text-gray-300 px-2">
               Restore your voice with the power of AI. Perfect for those who have lost their voice due to medical conditions.
             </p>
           </div>
           
           <VoiceForm />
 
-          <div className="text-center mt-12 mb-6">
+          <div className="text-center mt-8 md:mt-12 mb-4 md:mb-6">
             <TypewriterEffect 
               text="For people who lost their voice, VoiceBack restores their ability to speak using AI" 
-              className="text-base text-gray-600 dark:text-gray-400 italic"
+              className="text-sm md:text-base text-gray-600 dark:text-gray-400 italic"
             />
           </div>
         </div>

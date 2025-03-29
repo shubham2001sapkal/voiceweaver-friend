@@ -34,6 +34,16 @@
     --ring: 162 100% 20%;
 
     --radius: 0.5rem;
+
+    /* Add sidebar variables for completeness */
+    --sidebar-background: var(--background);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent);
+    --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
   }
 
   .dark {
@@ -64,6 +74,16 @@
     --border: 162 20% 20%;
     --input: 162 20% 20%;
     --ring: 162 100% 40%;
+
+    /* Add sidebar variables for completeness */
+    --sidebar-background: var(--background);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--accent);
+    --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
   }
 }
 
@@ -78,11 +98,37 @@
 
 /* Custom card style for VoiceBack */
 .voiceback-card {
-  @apply bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 border border-border mx-auto my-8;
-  max-width: 600px;
+  @apply bg-white dark:bg-gray-900 rounded-lg shadow-lg p-4 sm:p-6 border border-border mx-auto my-4 sm:my-8;
+  max-width: 100%;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .voiceback-card {
+    max-width: 600px;
+  }
 }
 
 /* Custom button style for VoiceBack */
 .voiceback-button {
   @apply bg-voiceback hover:bg-voiceback-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 w-full;
+}
+
+/* Responsive container */
+.responsive-container {
+  @apply w-full px-4 sm:px-6 md:px-8 mx-auto;
+  max-width: 1280px;
+}
+
+/* Responsive typography */
+.responsive-heading {
+  @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold;
+}
+
+.responsive-subheading {
+  @apply text-lg sm:text-xl md:text-2xl font-medium;
+}
+
+.responsive-text {
+  @apply text-sm sm:text-base;
 }

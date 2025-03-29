@@ -43,9 +43,9 @@ export default function SignIn() {
       <Header />
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold">Sign In</h1>
-            <p className="text-muted-foreground">Welcome back! Sign in to your account</p>
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-xl sm:text-2xl font-bold">Sign In</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Welcome back! Sign in to your account</p>
           </div>
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
@@ -57,6 +57,7 @@ export default function SignIn() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="w-full"
               />
             </div>
             <div className="space-y-2">
@@ -68,6 +69,7 @@ export default function SignIn() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="w-full"
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
