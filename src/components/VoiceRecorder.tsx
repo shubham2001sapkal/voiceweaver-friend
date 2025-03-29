@@ -19,13 +19,19 @@ export function VoiceRecorder({ onSampleReady }: { onSampleReady: (blob: Blob) =
       // Create a URL for the blob
       const url = URL.createObjectURL(blob);
       
-      // Insert the voice sample record
-      const { error } = await supabase.from('voice_logs').insert({
-        type: 'voice_sample',
+      // Prepare the data to be sent
+      const voiceLogData = {
         text: 'Voice sample recording',
         audio_url: url,
-        success: true
-      });
+      };
+      
+      // Log the data being sent to Supabase
+      console.log('Sending to Supabase voice_logs:', voiceLogData);
+      
+      // Insert the voice sample record
+      const { data, error } = await supabase.from('voice_logs').insert(voiceLogData);
+
+      console.log('Supabase response:', { data, error });
 
       if (error) {
         throw error;
