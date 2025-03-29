@@ -157,5 +157,5 @@ export class ElevenLabsService {
 
 // Initialize with the provided API key
 export const elevenlabsService = new ElevenLabsService({
-  apiKey: "sk_1549aa8a13b90c1128e6ff54e26dda966df9b615fb3c364e"
+  apiKey: "sk_ec57739c309b70f7fba2f5ba8dbcda2965bd7da7f0fece65"
 });
