@@ -1,10 +1,9 @@
-
 import { createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { createUser, signInUser, ensureUserProfile } from "@/lib/database";
+import { createUser, signInUser } from "@/lib/database";
 
 type SupabaseContextType = {
   supabase: typeof supabase;
@@ -32,20 +31,8 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       setLoading(false);
       
-      // When a user signs in or signs up, ensure their profile exists
-      if (event === 'SIGNED_IN' && session?.user) {
-        try {
-          const userData = session.user.user_metadata;
-          setTimeout(async () => {
-            await ensureUserProfile(session.user.id, { 
-              full_name: userData.full_name || 'User',
-              email: session.user.email
-            });
-          }, 0); // Use setTimeout to prevent deadlocks
-        } catch (error) {
-          console.error("Error ensuring user profile:", error);
-        }
-      }
+      // When a user signs in or signs up, we don't need to manually create profiles anymore
+      // The database trigger will handle this automatically
     });
 
     // THEN check for existing session
@@ -98,7 +85,7 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     } catch (error: any) {
       toast({
         title: "Sign up failed",
-        description: error.message || "An error occurred during sign up.",
+        description: error.message || "An error occurred during sign up",
         variant: "destructive",
       });
       throw error;

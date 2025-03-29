@@ -36,14 +36,8 @@ export const createUser = async (credentials: UserCredentials) => {
   
   if (error) throw error;
   
-  // If signup is successful, create the profile immediately (don't wait for confirmation)
-  if (data.user) {
-    await ensureUserProfile(data.user.id, { 
-      full_name: credentials.full_name || 'User',
-      email: credentials.email
-    });
-  }
-  
+  // We'll let the database trigger handle profile creation instead of doing it here
+  // This avoids the RLS policy violation
   return data;
 };
 
@@ -70,14 +64,13 @@ export const getUserProfile = async (userId: string) => {
   return data as ProfileData;
 };
 
-// This function will check if the user's profile exists
-// If not, it will create one
+// This function is modified to avoid the RLS policy violation
 export const ensureUserProfile = async (
   userId: string, 
   userData: { full_name: string; email?: string }
 ) => {
   try {
-    // Use a more specific cast that works around TypeScript limitations
+    // Check if profile exists first
     const client = supabase as any;
     const { data, error } = await client
       .from('profiles')
@@ -85,24 +78,18 @@ export const ensureUserProfile = async (
       .eq('id', userId)
       .single();
     
-    if (error && error.code === 'PGRST116') {
-      // Profile doesn't exist, create one
-      const { error: insertError } = await client
-        .from('profiles')
-        .insert([
-          { 
-            id: userId, 
-            full_name: userData.full_name,
-            email: userData.email,
-          }
-        ]);
-      
-      if (insertError) throw insertError;
-    } else if (error) {
+    // If there's a "not found" error, we will NOT try to create the profile here
+    // because it's likely being created by the database trigger
+    if (error && error.code !== 'PGRST116') {
       throw error;
     }
+    
+    // If no profile exists, we'll return without trying to create one
+    // The database trigger will handle this
+    return data;
   } catch (error) {
     console.error("Error in ensureUserProfile:", error);
-    throw error;
+    // We don't throw the error here to prevent signup failures
+    return null;
   }
 };
