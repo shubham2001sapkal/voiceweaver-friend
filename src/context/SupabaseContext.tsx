@@ -107,6 +107,30 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
         throw new Error(msg);
       }
       
+      // Now create a profile entry in the profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user.id,
+          full_name: fullName,
+          email: email,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+      
+      if (profileError) {
+        console.error("Error creating user profile:", profileError);
+        // We don't throw here because the auth user was created successfully
+        // But we log it to the console for debugging
+        toast({
+          title: "Profile creation issue",
+          description: "Your account was created but there was an issue setting up your profile.",
+          variant: "destructive",
+        });
+      } else {
+        console.log("Profile created successfully for user:", authData.user.id);
+      }
+      
       // Log to verify user data is created correctly
       console.log("Created user with data:", authData.user);
       
