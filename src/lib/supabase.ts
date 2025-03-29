@@ -7,5 +7,5 @@ const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Initialize ElevenLabs API key
-const elevenlabsApiKey = "sk_57f596ce6c2f2172c5090f2aabc6cf52b5c10093359d8e24";
+const elevenlabsApiKey = "sk_8a842f3f21ed553608f30b01d9d7f624db2135ee09649388";
 localStorage.setItem('elevenlabs_api_key', elevenlabsApiKey);
