@@ -1,12 +1,30 @@
 
-import { CodeSquare, LogIn, UserPlus } from "lucide-react";
+import { CodeSquare, LogIn, LogOut, User, UserPlus } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 import { useSupabase } from "@/context/SupabaseContext";
+import { useToast } from "@/components/ui/use-toast";
 
 export function Header() {
-  const { user } = useSupabase();
+  const { user, signOut } = useSupabase();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error signing out",
+        description: error.message || "An error occurred during sign out.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <header className="py-4 px-6 w-full border-b border-border/40 bg-secondary/30 backdrop-blur-sm">
@@ -46,14 +64,25 @@ export function Header() {
               </Button>
             </>
           ) : (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => {}}
-              className="flex items-center gap-1.5"
-            >
-              Profile
-            </Button>
+            <>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="flex items-center gap-1.5"
+              >
+                <User className="h-4 w-4" />
+                {user.user_metadata?.full_name || "Profile"}
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleSignOut}
+                className="flex items-center gap-1.5"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            </>
           )}
           <ThemeToggle />
         </div>
