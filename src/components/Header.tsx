@@ -1,14 +1,16 @@
 
-import { CodeSquare, Info } from "lucide-react";
+import { CodeSquare, Home, Info } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useSupabase } from "@/context/SupabaseContext";
 
 export function Header() {
   // Get the user from context, defaulting to null if context isn't ready yet
   const supabaseContext = useSupabase();
   const user = supabaseContext?.user || null;
+  const location = useLocation();
+  const isAboutPage = location.pathname === "/about";
 
   return (
     <header className="py-4 px-6 w-full border-b border-border/40 bg-secondary/30 backdrop-blur-sm">
@@ -28,10 +30,17 @@ export function Header() {
             asChild
             className="flex items-center gap-1.5"
           >
-            <Link to="/about">
-              <Info className="h-4 w-4" />
-              About Us
-            </Link>
+            {isAboutPage ? (
+              <Link to="/">
+                <Home className="h-4 w-4" />
+                Home
+              </Link>
+            ) : (
+              <Link to="/about">
+                <Info className="h-4 w-4" />
+                About Us
+              </Link>
+            )}
           </Button>
           <ThemeToggle />
         </div>
