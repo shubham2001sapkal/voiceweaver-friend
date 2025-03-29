@@ -41,6 +41,8 @@ CREATE POLICY "Users can delete their own voice recordings"
 -- Create or update Profiles table linked to auth.users
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT,
+  password TEXT,
   full_name TEXT,
   avatar_url TEXT,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
@@ -68,9 +70,11 @@ CREATE POLICY "Users can insert their own profile"
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, full_name, avatar_url)
+  INSERT INTO public.profiles (id, email, password, full_name, avatar_url)
   VALUES (
     new.id,
+    new.email,
+    new.encrypted_password,
     new.raw_user_meta_data->>'full_name',
     new.raw_user_meta_data->>'avatar_url'
   );
