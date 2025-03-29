@@ -1,5 +1,5 @@
 
-import { CodeSquare, Home, Info, LogIn, UserPlus } from "lucide-react";
+import { CodeSquare, Home, Info, UserPlus } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -41,19 +41,8 @@ export function Header() {
               </Button>
             </div>
           ) : (
-            // Show login and signup buttons when not logged in
+            // When not logged in, only show the signup button, removing the login button
             <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                asChild
-                className="flex items-center gap-1.5"
-              >
-                <Link to="/signin">
-                  <LogIn className="h-4 w-4" />
-                  Login
-                </Link>
-              </Button>
               <Button 
                 variant="default" 
                 size="sm" 
@@ -68,25 +57,27 @@ export function Header() {
             </div>
           )}
           
-          <Button 
-            variant="outline" 
-            size="sm" 
-            asChild
-            className="flex items-center gap-1.5"
-          >
-            {isAboutPage ? (
-              <Link to="/">
-                <Home className="h-4 w-4" />
-                Home
-              </Link>
-            ) : (
-              <Link to="/about">
-                <Info className="h-4 w-4" />
-                About Us
-              </Link>
-            )}
-          </Button>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              asChild
+              className="flex items-center gap-1.5"
+            >
+              {isAboutPage ? (
+                <Link to="/">
+                  <Home className="h-4 w-4" />
+                  Home
+                </Link>
+              ) : (
+                <Link to="/about">
+                  <Info className="h-4 w-4" />
+                  About Us
+                </Link>
+              )}
+            </Button>
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </header>
