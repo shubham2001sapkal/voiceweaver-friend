@@ -18,6 +18,8 @@ export function VoiceForm() {
   const [voiceSample, setVoiceSample] = useState<Blob | null>(null);
   const [text, setText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingVoice, setIsGeneratingVoice] = useState(false);
+  const [isGeneratingSpeech, setIsGeneratingSpeech] = useState(false);
   const [generatedAudio, setGeneratedAudio] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState(elevenlabsService.getApiKey() || "");
@@ -84,11 +86,11 @@ export function VoiceForm() {
     }
 
     try {
-      setIsLoading(true);
+      setIsGeneratingVoice(true);
 
       if (!elevenlabsService.getApiKey()) {
         setIsSettingsOpen(true);
-        setIsLoading(false);
+        setIsGeneratingVoice(false);
         return;
       }
 
@@ -133,7 +135,7 @@ export function VoiceForm() {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsGeneratingVoice(false);
     }
   };
 
@@ -157,7 +159,7 @@ export function VoiceForm() {
     }
 
     try {
-      setIsLoading(true);
+      setIsGeneratingSpeech(true);
 
       const audioBlob = await elevenlabsService.textToSpeech(text, selectedVoiceId);
       
@@ -176,7 +178,7 @@ export function VoiceForm() {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsGeneratingSpeech(false);
     }
   };
 
@@ -308,10 +310,10 @@ export function VoiceForm() {
                 <Button
                   onClick={handleGenerateVoice}
                   className="bg-voiceback hover:bg-voiceback/90"
-                  disabled={isLoading || !isConnected || !voiceSample || !voiceName.trim()}
+                  disabled={isGeneratingVoice || isGeneratingSpeech || !isConnected || !voiceSample || !voiceName.trim()}
                   title={!isConnected ? "Connect to ElevenLabs first" : ""}
                 >
-                  {isLoading && !generatedAudio ? (
+                  {isGeneratingVoice ? (
                     "Saving..."
                   ) : (
                     <>
@@ -370,10 +372,10 @@ export function VoiceForm() {
                 <Button
                   onClick={handleUsePresetVoice}
                   variant="outline"
-                  disabled={isLoading || !text.trim()}
+                  disabled={isGeneratingSpeech || isGeneratingVoice || !text.trim() || !selectedVoiceId}
                   className="w-full"
                 >
-                  {isLoading && !voiceSample ? (
+                  {isGeneratingSpeech ? (
                     "Generating..."
                   ) : (
                     <>
