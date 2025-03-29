@@ -311,7 +311,7 @@ export function VoiceForm() {
                   disabled={isLoading || !isConnected || !voiceSample || !voiceName.trim()}
                   title={!isConnected ? "Connect to ElevenLabs first" : ""}
                 >
-                  {isLoading ? (
+                  {isLoading && !generatedAudio ? (
                     "Saving..."
                   ) : (
                     <>
@@ -370,10 +370,10 @@ export function VoiceForm() {
                 <Button
                   onClick={handleUsePresetVoice}
                   variant="outline"
-                  disabled={isLoading || !isConnected}
+                  disabled={isLoading || !text.trim()}
                   className="w-full"
                 >
-                  {isLoading ? (
+                  {isLoading && !voiceSample ? (
                     "Generating..."
                   ) : (
                     <>
