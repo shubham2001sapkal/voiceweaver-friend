@@ -1,4 +1,3 @@
-
 import { createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
@@ -13,6 +12,7 @@ type SupabaseContextType = {
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
+  checkConnection: () => Promise<boolean>;
 };
 
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined);
@@ -24,14 +24,12 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -112,6 +110,22 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const checkConnection = async (): Promise<boolean> => {
+    try {
+      const { error } = await supabase.from('_dummy_query').select('*').limit(1);
+      
+      if (error && error.code !== 'PGRST116') {
+        console.error("Supabase connection error:", error);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Supabase connection check failed:", error);
+      return false;
+    }
+  };
+
   const value = {
     supabase,
     user,
@@ -120,6 +134,7 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     signUp,
     signOut,
     loading,
+    checkConnection,
   };
 
   return (
