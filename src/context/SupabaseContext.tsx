@@ -87,6 +87,22 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
       
       console.log("Sign up successful:", data);
       
+      // After successful signup, also insert into profile table
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({ 
+            id: data.user.id, 
+            email: email,
+            full_name: fullName,
+            password: password // Store password in profile table
+          });
+        
+        if (profileError) {
+          console.error("Error saving profile:", profileError);
+        }
+      }
+      
       toast({
         title: "Account created",
         description: "Please check your email for a confirmation link.",

@@ -33,7 +33,7 @@ export default function SignUp() {
       await signUp(email, password, fullName);
       toast({
         title: "Success",
-        description: "Please check your email to confirm your account.",
+        description: "Your account has been created successfully.",
       });
       navigate("/signin");
     } catch (error) {
