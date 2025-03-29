@@ -1,5 +1,5 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 export interface VoiceRecording {
   id?: string;
@@ -11,9 +11,7 @@ export interface VoiceRecording {
 
 export const saveVoiceRecording = async (recording: VoiceRecording) => {
   try {
-    // Cast the client to any to work around type restrictions
-    const client = supabase as any;
-    const { data, error } = await client
+    const { data, error } = await supabase
       .from('voice_recordings')
       .insert([recording])
       .select();
@@ -28,9 +26,7 @@ export const saveVoiceRecording = async (recording: VoiceRecording) => {
 
 export const getVoiceRecordings = async (userId?: string) => {
   try {
-    // Cast the client to any to work around type restrictions
-    const client = supabase as any;
-    let query = client
+    let query = supabase
       .from('voice_recordings')
       .select('*')
       .order('created_at', { ascending: false });

@@ -1,28 +1,29 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSupabase } from "@/context/SupabaseContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Header } from "@/components/Header";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useSupabase } from "@/context/SupabaseContext";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function SignIn() {
+  const { signIn } = useSupabase();
   const navigate = useNavigate();
-  const { signIn, loading: authLoading } = useSupabase();
-  
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    
     if (!email || !password) {
-      setError("Please fill in all fields");
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -30,9 +31,8 @@ export default function SignIn() {
       setLoading(true);
       await signIn(email, password);
       navigate("/");
-    } catch (error: any) {
+    } catch (error) {
       console.error("Sign in error:", error);
-      setError(error.message || "Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -47,14 +47,6 @@ export default function SignIn() {
             <h1 className="text-2xl font-bold">Sign In</h1>
             <p className="text-muted-foreground">Welcome back! Sign in to your account</p>
           </div>
-          
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -78,8 +70,8 @@ export default function SignIn() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading || authLoading}>
-              {loading || authLoading ? "Signing in..." : "Sign In"}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
           <div className="mt-4 text-center">

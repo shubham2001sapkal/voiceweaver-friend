@@ -1,45 +1,43 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSupabase } from "@/context/SupabaseContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Header } from "@/components/Header";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useSupabase } from "@/context/SupabaseContext";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function SignUp() {
+  const { signUp } = useSupabase();
   const navigate = useNavigate();
-  const { signUp, loading: authLoading } = useSupabase();
-  
+  const { toast } = useToast();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    
     if (!fullName || !email || !password) {
-      setError("Please fill in all fields");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      toast({
+        title: "Error",
+        description: "Please fill in all fields",
+        variant: "destructive",
+      });
       return;
     }
 
     try {
       setLoading(true);
       await signUp(email, password, fullName);
-      // After successful signup, we are automatically signed in and redirected to home
-      navigate("/");
-    } catch (error: any) {
+      toast({
+        title: "Success",
+        description: "Please check your email to confirm your account.",
+      });
+      navigate("/signin");
+    } catch (error) {
       console.error("Sign up error:", error);
-      setError(error.message || "An error occurred during sign up");
     } finally {
       setLoading(false);
     }
@@ -54,14 +52,6 @@ export default function SignUp() {
             <h1 className="text-2xl font-bold">Create an Account</h1>
             <p className="text-muted-foreground">Sign up to get started</p>
           </div>
-          
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          
           <form onSubmit={handleSignUp} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name</Label>
@@ -95,12 +85,9 @@ export default function SignUp() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <p className="text-xs text-muted-foreground">
-                Password must be at least 6 characters
-              </p>
             </div>
-            <Button type="submit" className="w-full" disabled={loading || authLoading}>
-              {loading || authLoading ? "Creating account..." : "Sign Up"}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Creating account..." : "Sign Up"}
             </Button>
           </form>
           <div className="mt-4 text-center">
