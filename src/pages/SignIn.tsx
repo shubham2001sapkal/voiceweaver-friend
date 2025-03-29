@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Google } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { Header } from "@/components/Header";
 
 const formSchema = z.object({
@@ -121,7 +121,7 @@ export default function SignIn() {
               onClick={handleGoogleSignIn}
               disabled={isLoading}
             >
-              <Google className="mr-2 h-4 w-4" />
+              <LogIn className="mr-2 h-4 w-4" />
               Google
             </Button>
           </CardContent>
