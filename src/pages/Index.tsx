@@ -2,18 +2,22 @@
 import { Header } from "@/components/Header";
 import { VoiceForm } from "@/components/VoiceForm";
 import { Footer } from "@/components/Footer";
-import { useSupabase } from "@/context/SupabaseContext";
 import { useEffect, useState, useRef } from "react";
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { TypewriterEffect } from "@/components/TypewriterEffect";
+import { useSupabase } from "@/context/SupabaseContext";
 
 const Index = () => {
-  const { checkConnection } = useSupabase();
+  const { toast } = useToast();
+  const supabaseContext = useSupabase();
+  const { checkConnection } = supabaseContext;
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'failed'>('checking');
   const hasToastBeenShown = useRef(false);
   
   useEffect(() => {
     const verifyConnection = async () => {
+      if (!checkConnection) return;
+      
       try {
         const isConnected = await checkConnection();
         setConnectionStatus(isConnected ? 'connected' : 'failed');
@@ -49,7 +53,7 @@ const Index = () => {
     };
     
     verifyConnection();
-  }, [checkConnection]);
+  }, [checkConnection, toast]);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-gray-900">
