@@ -1,14 +1,15 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { VoiceRecorder } from "./VoiceRecorder";
 import { elevenlabsService } from "@/services/elevenlabs";
-import { Mic, Play, AlertCircle, Wand2 } from "lucide-react";
+import { Mic, Play, AlertCircle, Wand2, VolumeX, Volume2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function VoiceForm() {
   const [voiceSample, setVoiceSample] = useState<Blob | null>(null);
@@ -17,8 +18,42 @@ export function VoiceForm() {
   const [generatedAudio, setGeneratedAudio] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState(elevenlabsService.getApiKey() || "");
+  const [availableVoices, setAvailableVoices] = useState<any[]>([]);
+  const [selectedVoiceId, setSelectedVoiceId] = useState<string>(elevenlabsService.getApiKey() ? "EXAVITQu4vr4xnSDxMaL" : "");
+  const [isConnected, setIsConnected] = useState<boolean>(!!elevenlabsService.getApiKey());
+  const [isMuted, setIsMuted] = useState<boolean>(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
+
+  // Check connection and fetch voices when component mounts
+  useEffect(() => {
+    const checkConnection = async () => {
+      const apiKey = elevenlabsService.getApiKey();
+      if (apiKey) {
+        try {
+          const voices = await elevenlabsService.getAvailableVoices();
+          setAvailableVoices(voices);
+          setIsConnected(true);
+          
+          toast({
+            title: "Connected to ElevenLabs",
+            description: `Successfully connected with ${voices.length} available voices`,
+          });
+        } catch (error) {
+          console.error("Failed to connect to ElevenLabs", error);
+          setIsConnected(false);
+          
+          toast({
+            title: "ElevenLabs Connection Failed",
+            description: "Please check your API key",
+            variant: "destructive",
+          });
+        }
+      }
+    };
+    
+    checkConnection();
+  }, [toast]);
 
   const handleSampleReady = (blob: Blob) => {
     setVoiceSample(blob);
@@ -53,8 +88,7 @@ export function VoiceForm() {
         return;
       }
 
-      // In a real implementation, we would first clone the voice
-      // then use that voice ID for text-to-speech
+      // Clone the voice
       const voiceId = await elevenlabsService.cloneVoice(voiceSample, "My Voice");
       
       // Then use the cloned voice for the text to speech
@@ -68,11 +102,56 @@ export function VoiceForm() {
         title: "Voice Generated",
         description: "Your text has been converted to speech with your voice!",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating voice:", error);
       toast({
         title: "Error",
-        description: "Failed to generate voice. Please try again.",
+        description: error.message || "Failed to generate voice. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUsePresetVoice = async () => {
+    if (!text.trim()) {
+      toast({
+        title: "Missing Text",
+        description: "Please enter the text you want to convert to speech.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedVoiceId) {
+      toast({
+        title: "No Voice Selected",
+        description: "Please select a voice to use.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      // Use the selected voice for text to speech
+      const audioBlob = await elevenlabsService.textToSpeech(text, selectedVoiceId);
+      
+      // Create a URL for the audio blob
+      const audioUrl = URL.createObjectURL(audioBlob);
+      setGeneratedAudio(audioUrl);
+
+      toast({
+        title: "Voice Generated",
+        description: "Your text has been converted to speech!",
+      });
+    } catch (error: any) {
+      console.error("Error generating voice:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to generate voice. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -82,18 +161,47 @@ export function VoiceForm() {
 
   const playAudio = () => {
     if (audioRef.current && generatedAudio) {
+      if (isMuted) {
+        audioRef.current.muted = true;
+      } else {
+        audioRef.current.muted = false;
+      }
       audioRef.current.play();
     }
   };
 
-  const saveApiKey = () => {
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    if (audioRef.current) {
+      audioRef.current.muted = !isMuted;
+    }
+  };
+
+  const saveApiKey = async () => {
     if (apiKey.trim()) {
       elevenlabsService.setApiKey(apiKey.trim());
       setIsSettingsOpen(false);
-      toast({
-        title: "API Key Saved",
-        description: "Your ElevenLabs API key has been saved.",
-      });
+      
+      try {
+        // Test connection with the new API key
+        const voices = await elevenlabsService.getAvailableVoices();
+        setAvailableVoices(voices);
+        setIsConnected(true);
+        
+        toast({
+          title: "API Key Saved",
+          description: `Successfully connected with ${voices.length} available voices`,
+        });
+      } catch (error) {
+        console.error("Failed to connect with the provided API key", error);
+        setIsConnected(false);
+        
+        toast({
+          title: "Connection Failed",
+          description: "The API key you provided seems to be invalid.",
+          variant: "destructive",
+        });
+      }
     } else {
       toast({
         title: "Invalid API Key",
@@ -105,7 +213,7 @@ export function VoiceForm() {
 
   return (
     <div className="space-y-6">
-      <div className="voiceback-card">
+      <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-voiceback dark:text-primary flex items-center justify-center gap-2">
             <Mic className="h-6 w-6" /> VoiceBack
@@ -113,6 +221,21 @@ export function VoiceForm() {
           <p className="text-muted-foreground mt-2">
             Restore your voice with the power of AI
           </p>
+          
+          {isConnected ? (
+            <div className="flex items-center justify-center mt-2 text-sm text-green-600 dark:text-green-400">
+              <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
+              Connected to ElevenLabs
+            </div>
+          ) : (
+            <button 
+              onClick={() => setIsSettingsOpen(true)}
+              className="flex items-center justify-center mt-2 text-sm text-red-600 dark:text-red-400 hover:underline"
+            >
+              <div className="h-2 w-2 rounded-full bg-red-500 mr-2"></div>
+              Not connected to ElevenLabs - Click to connect
+            </button>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -139,24 +262,70 @@ export function VoiceForm() {
             />
           </div>
 
-          <Button
-            onClick={handleGenerateVoice}
-            className="voiceback-button"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              "Generating..."
-            ) : (
-              <>
-                <Wand2 className="h-4 w-4 mr-2" /> Generate Voice
-              </>
+          {isConnected && availableVoices.length > 0 && (
+            <div>
+              <Label htmlFor="voice-select">Or use a preset voice</Label>
+              <div className="mt-2">
+                <Select value={selectedVoiceId} onValueChange={setSelectedVoiceId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a voice" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableVoices.map(voice => (
+                      <SelectItem key={voice.voice_id} value={voice.voice_id}>
+                        {voice.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-wrap gap-4">
+            <Button
+              onClick={handleGenerateVoice}
+              className="bg-voiceback hover:bg-voiceback/90"
+              disabled={isLoading || !isConnected}
+            >
+              {isLoading ? (
+                "Generating..."
+              ) : (
+                <>
+                  <Wand2 className="h-4 w-4 mr-2" /> Clone & Generate Voice
+                </>
+              )}
+            </Button>
+
+            {isConnected && selectedVoiceId && (
+              <Button
+                onClick={handleUsePresetVoice}
+                variant="outline"
+                disabled={isLoading || !isConnected}
+              >
+                {isLoading ? (
+                  "Generating..."
+                ) : (
+                  <>
+                    <Volume2 className="h-4 w-4 mr-2" /> Use Preset Voice
+                  </>
+                )}
+              </Button>
             )}
-          </Button>
+          </div>
 
           {generatedAudio && (
             <div className="mt-4 p-3 bg-secondary rounded-md flex items-center justify-between">
               <span className="text-sm font-medium">Generated audio ready</span>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={toggleMute}
+                  className="w-8 h-8"
+                >
+                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                </Button>
                 <Button
                   size="sm"
                   variant="outline"
@@ -223,7 +392,7 @@ export function VoiceForm() {
             <Button variant="outline" onClick={() => setIsSettingsOpen(false)}>
               Cancel
             </Button>
-            <Button className="bg-voiceback hover:bg-voiceback-700" onClick={saveApiKey}>
+            <Button className="bg-voiceback hover:bg-voiceback/90" onClick={saveApiKey}>
               Save API Key
             </Button>
           </DialogFooter>

@@ -1,7 +1,5 @@
 
 // This service will handle the integration with ElevenLabs API
-// Note: For the initial version, we're creating a placeholder that will
-// mock the API calls, as we need the user to provide an API key
 
 export interface ElevenLabsOptions {
   apiKey?: string;
@@ -13,6 +11,7 @@ export class ElevenLabsService {
   private apiKey: string | null = null;
   private voiceId: string = "EXAVITQu4vr4xnSDxMaL"; // Default to Sarah voice
   private model: string = "eleven_multilingual_v2"; // Default model
+  private apiUrl: string = "https://api.elevenlabs.io/v1";
   
   constructor(options?: ElevenLabsOptions) {
     if (options?.apiKey) {
@@ -53,12 +52,31 @@ export class ElevenLabsService {
       throw new Error("API key is required for voice cloning");
     }
 
-    // This is where we would make the actual API call to ElevenLabs
-    // For now, we'll return a mock voice ID
-    console.log(`Cloning voice from audio sample, name: ${name}`);
-    
-    // In the actual implementation, we would upload the audio and get a voice ID back
-    return "mocked-voice-id-" + Date.now();
+    try {
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('description', 'Voice cloned via VoiceBack app');
+      formData.append('files', audioBlob, 'voice_sample.wav');
+
+      const response = await fetch(`${this.apiUrl}/voices/add`, {
+        method: 'POST',
+        headers: {
+          'xi-api-key': this.apiKey
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Failed to clone voice: ${errorData.detail || response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.voice_id;
+    } catch (error) {
+      console.error('Voice cloning error:', error);
+      throw error;
+    }
   }
 
   public async textToSpeech(text: string, voiceId?: string): Promise<Blob> {
@@ -68,19 +86,63 @@ export class ElevenLabsService {
       throw new Error("API key is required for text-to-speech conversion");
     }
 
-    // For actual implementation, we would make a request to the ElevenLabs API
-    console.log(`Converting text to speech: "${text}" using voice ID: ${targetVoiceId}`);
-    
-    // This is just a placeholder. In reality, we would return the audio blob from ElevenLabs
-    const response = await fetch('https://elevenlabs.io/api/v1/text-to-speech/public', {
-      method: 'GET',
-    });
+    try {
+      const response = await fetch(`${this.apiUrl}/text-to-speech/${targetVoiceId}`, {
+        method: 'POST',
+        headers: {
+          'xi-api-key': this.apiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          text: text,
+          model_id: this.model,
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.75
+          }
+        })
+      });
 
-    // For demo purposes, let's return a simple placeholder audio
-    // In a real implementation, this would be the actual audio from ElevenLabs
-    return new Blob(['mock audio data'], { type: 'audio/mpeg' });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to convert text to speech: ${errorText}`);
+      }
+
+      return await response.blob();
+    } catch (error) {
+      console.error('Text-to-speech error:', error);
+      throw error;
+    }
+  }
+  
+  public async getAvailableVoices(): Promise<any[]> {
+    if (!this.apiKey) {
+      throw new Error("API key is required to get available voices");
+    }
+    
+    try {
+      const response = await fetch(`${this.apiUrl}/voices`, {
+        method: 'GET',
+        headers: {
+          'xi-api-key': this.apiKey
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to get voices: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return data.voices || [];
+    } catch (error) {
+      console.error('Get voices error:', error);
+      throw error;
+    }
   }
 }
 
-// Create a singleton instance
-export const elevenlabsService = new ElevenLabsService();
+// Initialize with the provided API key
+export const elevenlabsService = new ElevenLabsService({
+  apiKey: "sk_1549aa8a13b90c1128e6ff54e26dda966df9b615fb3c364e"
+});
+
