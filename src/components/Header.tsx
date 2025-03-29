@@ -23,8 +23,7 @@ export function Header() {
               Knoxed CreatiCode
             </span>
           </Link>
-          <div className="flex flex-col gap-2 mt-1">
-            <ThemeToggle />
+          <div className="flex items-center gap-2 mt-1">
             <Button 
               variant="outline" 
               size="sm" 
@@ -43,6 +42,7 @@ export function Header() {
                 </Link>
               )}
             </Button>
+            <ThemeToggle />
           </div>
         </div>
         <div className="flex items-center gap-3">
