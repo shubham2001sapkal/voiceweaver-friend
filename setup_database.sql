@@ -87,3 +87,28 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Function to update profile when user is updated
+CREATE OR REPLACE FUNCTION public.handle_user_update()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE public.profiles 
+  SET 
+    email = new.email,
+    full_name = COALESCE(new.raw_user_meta_data->>'full_name', profiles.full_name),
+    avatar_url = COALESCE(new.raw_user_meta_data->>'avatar_url', profiles.avatar_url),
+    updated_at = now()
+  WHERE id = new.id;
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create trigger to update profile when a user is updated
+DROP TRIGGER IF EXISTS on_auth_user_updated ON auth.users;
+CREATE TRIGGER on_auth_user_updated
+  AFTER UPDATE ON auth.users
+  FOR EACH ROW 
+  WHEN (OLD.raw_user_meta_data->>'full_name' IS DISTINCT FROM NEW.raw_user_meta_data->>'full_name' OR 
+        OLD.raw_user_meta_data->>'avatar_url' IS DISTINCT FROM NEW.raw_user_meta_data->>'avatar_url' OR
+        OLD.email IS DISTINCT FROM NEW.email)
+  EXECUTE FUNCTION public.handle_user_update();
