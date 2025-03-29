@@ -4,19 +4,23 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useSupabase } from "@/context/SupabaseContext";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { elevenLabsService, VoiceLogEntry } from "@/services/elevenlabs";
+import { InfoCircle } from "lucide-react";
 
 export function VoiceForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedSample, setSelectedSample] = useState<Blob | null>(null);
   const [savedVoiceSamples, setSavedVoiceSamples] = useState<VoiceLogEntry[]>([]);
   const [showSavedSamples, setShowSavedSamples] = useState(false);
+  const [fetchStatus, setFetchStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const { toast } = useToast();
   const { supabase } = useSupabase();
 
   // Function to fetch saved voice samples from Supabase
   const fetchSavedVoiceSamples = async () => {
     try {
+      setFetchStatus('loading');
       console.log('Attempting to fetch voice samples from voice_logs');
       
       // Query voice logs from the database
@@ -29,11 +33,13 @@ export function VoiceForm() {
       console.log('Voice logs query result:', { data, error });
       
       if (error) {
+        setFetchStatus('error');
         throw error;
       }
       
       if (data && data.length > 0) {
         setSavedVoiceSamples(data);
+        setFetchStatus('success');
         console.log('Retrieved voice samples:', data);
         toast({
           title: "Voice Samples Retrieved",
@@ -41,6 +47,7 @@ export function VoiceForm() {
         });
       } else {
         console.log('No voice samples found');
+        setFetchStatus('success');
         toast({
           title: "No Voice Samples",
           description: "No saved voice samples found in the database.",
@@ -48,6 +55,7 @@ export function VoiceForm() {
       }
     } catch (error: any) {
       console.error("Error fetching voice samples:", error);
+      setFetchStatus('error');
       toast({
         title: "Failed to Retrieve Voice Samples",
         description: error.message || "There was an error retrieving your saved voice samples.",
@@ -114,6 +122,11 @@ export function VoiceForm() {
   const handleSampleReady = (blob: Blob) => {
     setSelectedSample(blob);
     console.log("Voice sample ready:", blob);
+    
+    toast({
+      title: "Voice Sample Recorded",
+      description: "Your voice sample has been processed and is ready for use.",
+    });
   };
 
   // Toggle showing/hiding saved samples
@@ -134,6 +147,14 @@ export function VoiceForm() {
       </div>
 
       <div className="p-6 space-y-6">
+        <Alert variant="default" className="bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
+          <InfoCircle className="h-4 w-4" />
+          <AlertTitle>Database Status</AlertTitle>
+          <AlertDescription>
+            Voice samples will be saved to your Supabase voice_logs table. Make sure Row Level Security (RLS) policies are properly configured.
+          </AlertDescription>
+        </Alert>
+
         <VoiceRecorder onSampleReady={handleSampleReady} />
 
         {selectedSample && (
@@ -153,9 +174,25 @@ export function VoiceForm() {
           {showSavedSamples && (
             <div className="mt-4 space-y-4">
               <h4 className="font-medium">Saved Voice Samples</h4>
-              {savedVoiceSamples.length === 0 ? (
+              
+              {fetchStatus === 'loading' && (
+                <p className="text-muted-foreground">Loading saved voice samples...</p>
+              )}
+              
+              {fetchStatus === 'error' && (
+                <Alert variant="destructive">
+                  <AlertTitle>Error Fetching Samples</AlertTitle>
+                  <AlertDescription>
+                    There was an error retrieving your saved voice samples. Check your database configuration.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {fetchStatus === 'success' && savedVoiceSamples.length === 0 && (
                 <p className="text-muted-foreground">No saved voice samples found.</p>
-              ) : (
+              )}
+              
+              {fetchStatus === 'success' && savedVoiceSamples.length > 0 && (
                 <div className="grid gap-4 sm:grid-cols-2">
                   {savedVoiceSamples.map((sample, index) => (
                     <div key={sample.id || index} className="p-3 border rounded-md bg-background">
@@ -181,3 +218,5 @@ export function VoiceForm() {
     </div>
   );
 }
+
+export default VoiceForm;

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, Square, Upload } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useSupabase } from "@/context/SupabaseContext";
 
 export function VoiceRecorder({ onSampleReady }: { onSampleReady: (blob: Blob) => void }) {
@@ -44,15 +44,24 @@ export function VoiceRecorder({ onSampleReady }: { onSampleReady: (blob: Blob) =
         console.log('Supabase response:', { data, error });
 
         if (error) {
-          throw error;
+          if (error.code === '42501') {
+            // This is a Row Level Security error
+            toast({
+              title: "Permission Error",
+              description: "Unable to save voice sample due to row-level security. Please check your Supabase RLS policies.",
+              variant: "destructive",
+            });
+          } else {
+            throw error;
+          }
+        } else {
+          toast({
+            title: "Voice Sample Saved",
+            description: "Your voice sample was successfully saved to the database.",
+            variant: "default",
+            className: "bg-green-100 border-green-400 dark:bg-green-900/20",
+          });
         }
-
-        toast({
-          title: "Voice Sample Saved",
-          description: "Your voice sample was successfully saved to the database.",
-          variant: "default",
-          className: "bg-green-100 border-green-400 dark:bg-green-900/20",
-        });
       };
     } catch (error: any) {
       console.error('Failed to save voice sample:', error);
