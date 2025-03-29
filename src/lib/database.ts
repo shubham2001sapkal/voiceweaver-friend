@@ -58,9 +58,10 @@ export const signInUser = async (credentials: { email: string; password: string 
 };
 
 export const getUserProfile = async (userId: string) => {
-  // Use type assertion to work around the typing issue
-  const { data, error } = await supabase
-    .from('profiles' as any)
+  // Use a more specific cast that works around TypeScript limitations
+  const client = supabase as any;
+  const { data, error } = await client
+    .from('profiles')
     .select('*')
     .eq('id', userId)
     .single();
@@ -76,24 +77,25 @@ export const ensureUserProfile = async (
   userData: { full_name: string; email?: string }
 ) => {
   try {
-    // Use type assertion to work around the typing issue
-    const { data, error } = await supabase
-      .from('profiles' as any)
+    // Use a more specific cast that works around TypeScript limitations
+    const client = supabase as any;
+    const { data, error } = await client
+      .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
     
     if (error && error.code === 'PGRST116') {
       // Profile doesn't exist, create one
-      const { error: insertError } = await supabase
-        .from('profiles' as any)
+      const { error: insertError } = await client
+        .from('profiles')
         .insert([
           { 
             id: userId, 
             full_name: userData.full_name,
             email: userData.email,
           }
-        ] as any);
+        ]);
       
       if (insertError) throw insertError;
     } else if (error) {

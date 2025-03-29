@@ -1,3 +1,4 @@
+
 import { createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -127,8 +128,7 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
 
   const checkConnection = async (): Promise<boolean> => {
     try {
-      // Use a simple auth check instead of RPC
-      const { data } = await supabase.auth.getSession();
+      const response = await supabase.auth.getSession();
       return true;
     } catch (error) {
       console.error("Supabase connection check failed:", error);

@@ -11,10 +11,11 @@ export interface VoiceRecording {
 
 export const saveVoiceRecording = async (recording: VoiceRecording) => {
   try {
-    // Use a type assertion to bypass the type checking
-    const { data, error } = await supabase
-      .from('voice_recordings' as any)
-      .insert([recording] as any)
+    // Cast the client to any to work around type restrictions
+    const client = supabase as any;
+    const { data, error } = await client
+      .from('voice_recordings')
+      .insert([recording])
       .select();
     
     if (error) throw error;
@@ -27,9 +28,10 @@ export const saveVoiceRecording = async (recording: VoiceRecording) => {
 
 export const getVoiceRecordings = async (userId?: string) => {
   try {
-    // Use a type assertion to bypass the type checking
-    let query = supabase
-      .from('voice_recordings' as any)
+    // Cast the client to any to work around type restrictions
+    const client = supabase as any;
+    let query = client
+      .from('voice_recordings')
       .select('*')
       .order('created_at', { ascending: false });
     
