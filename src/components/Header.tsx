@@ -14,7 +14,7 @@ export function Header() {
   const isAboutPage = location.pathname === "/about";
 
   return (
-    <header className="py-4 px-6 w-full border-b border-border/40 bg-secondary/30 backdrop-blur-sm">
+    <header className="py-2 px-6 w-full border-b border-border/40 bg-secondary/30 backdrop-blur-sm">
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
