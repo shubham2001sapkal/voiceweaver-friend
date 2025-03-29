@@ -19,6 +19,7 @@ export function VoiceForm() {
     toggleSavedSamples,
     useSavedVoiceSample,
     downloadSavedSample,
+    playSavedSample,
     handleSynthesizeVoice
   } = useVoiceForm();
 
@@ -55,6 +56,7 @@ export function VoiceForm() {
           savedVoiceSamples={savedVoiceSamples}
           onUseSample={useSavedVoiceSample}
           onDownload={downloadSavedSample}
+          onPlay={playSavedSample}
         />
       </div>
     </div>

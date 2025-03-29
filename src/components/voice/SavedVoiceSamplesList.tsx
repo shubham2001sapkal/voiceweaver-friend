@@ -12,6 +12,7 @@ interface SavedVoiceSamplesListProps {
   savedVoiceSamples: VoiceLogEntry[];
   onUseSample: (sample: VoiceLogEntry) => void;
   onDownload: (sample: VoiceLogEntry) => void;
+  onPlay: (sample: VoiceLogEntry) => void;
 }
 
 export function SavedVoiceSamplesList({
@@ -20,7 +21,8 @@ export function SavedVoiceSamplesList({
   fetchStatus,
   savedVoiceSamples,
   onUseSample,
-  onDownload
+  onDownload,
+  onPlay
 }: SavedVoiceSamplesListProps) {
   return (
     <div className="mt-4">
@@ -57,6 +59,7 @@ export function SavedVoiceSamplesList({
                   sample={sample} 
                   onUseSample={onUseSample}
                   onDownload={onDownload}
+                  onPlay={onPlay}
                 />
               ))}
             </div>
