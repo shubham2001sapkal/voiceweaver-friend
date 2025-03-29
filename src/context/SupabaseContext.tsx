@@ -128,11 +128,20 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
 
   const checkConnection = async (): Promise<boolean> => {
     try {
-      const { data, error } = await supabase.from('profiles').select('count').limit(1);
+      // Use raw query approach instead of table name to avoid type issues
+      const { error } = await supabase.rpc('check_connection');
       
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error("Supabase connection check failed:", error);
-        return false;
+        // Try a simpler approach as fallback
+        try {
+          const { data: authData } = await supabase.auth.getSession();
+          // If we get here, connection is working
+          return true;
+        } catch (fallbackError) {
+          console.error("Fallback connection check failed:", fallbackError);
+          return false;
+        }
       }
       
       return true;

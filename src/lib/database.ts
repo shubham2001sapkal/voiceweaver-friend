@@ -15,6 +15,13 @@ export type UserCredentials = {
   full_name?: string;
 }
 
+// Type definition for profile data used locally
+export interface ProfileData {
+  id: string;
+  full_name: string;
+  email?: string;
+}
+
 // Authentication functions
 export const createUser = async (credentials: UserCredentials) => {
   const { data, error } = await supabase.auth.signUp({ 
@@ -51,6 +58,7 @@ export const signInUser = async (credentials: { email: string; password: string 
 };
 
 export const getUserProfile = async (userId: string) => {
+  // Use type assertion to work around the typing issue
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
@@ -58,7 +66,7 @@ export const getUserProfile = async (userId: string) => {
     .single();
   
   if (error) throw error;
-  return data;
+  return data as ProfileData;
 };
 
 // This function will check if the user's profile exists
@@ -67,26 +75,32 @@ export const ensureUserProfile = async (
   userId: string, 
   userData: { full_name: string; email?: string }
 ) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-  
-  if (error && error.code === 'PGRST116') {
-    // Profile doesn't exist, create one
-    const { error: insertError } = await supabase
+  try {
+    // Use type assertion to work around the typing issue
+    const { data, error } = await supabase
       .from('profiles')
-      .insert([
-        { 
-          id: userId, 
-          full_name: userData.full_name,
-          email: userData.email,
-        }
-      ]);
+      .select('*')
+      .eq('id', userId)
+      .single();
     
-    if (insertError) throw insertError;
-  } else if (error) {
+    if (error && error.code === 'PGRST116') {
+      // Profile doesn't exist, create one
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert([
+          { 
+            id: userId, 
+            full_name: userData.full_name,
+            email: userData.email,
+          }
+        ] as any);
+      
+      if (insertError) throw insertError;
+    } else if (error) {
+      throw error;
+    }
+  } catch (error) {
+    console.error("Error in ensureUserProfile:", error);
     throw error;
   }
 };
