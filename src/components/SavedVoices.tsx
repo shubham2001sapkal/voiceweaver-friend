@@ -1,35 +1,21 @@
 
-import { useState, useEffect, useRef } from "react";
-import { elevenlabsService, SavedVoice } from "@/services/elevenlabs";
+import { useState, useRef } from "react";
+import { elevenlabsService } from "@/services/elevenlabs";
 import { Button } from "@/components/ui/button";
 import { Play, Volume2, VolumeX } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 
 interface SavedVoicesProps {
   onVoiceSelect: (voiceId: string) => void;
   text: string;
+  selectedVoiceId: string;
 }
 
-export function SavedVoices({ onVoiceSelect, text }: SavedVoicesProps) {
-  const [savedVoices, setSavedVoices] = useState<SavedVoice[]>([]);
+export function SavedVoices({ onVoiceSelect, text, selectedVoiceId }: SavedVoicesProps) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [selectedVoiceId, setSelectedVoiceId] = useState<string>("");
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    // Load saved voices
-    const voices = elevenlabsService.getSavedVoices();
-    setSavedVoices(voices);
-  }, []);
-
-  const handleVoiceSelect = (voiceId: string) => {
-    setSelectedVoiceId(voiceId);
-    onVoiceSelect(voiceId);
-  };
 
   const playWithVoice = async () => {
     if (!selectedVoiceId || !text.trim()) {
@@ -74,28 +60,8 @@ export function SavedVoices({ onVoiceSelect, text }: SavedVoicesProps) {
     }
   };
 
-  if (savedVoices.length === 0) {
-    return <div className="text-sm text-muted-foreground mt-2">No saved voices yet. Record or upload a voice sample first.</div>;
-  }
-
   return (
     <div className="space-y-3 mt-3">
-      <div>
-        <Label htmlFor="saved-voice-select">Your Saved Voices</Label>
-        <Select value={selectedVoiceId} onValueChange={handleVoiceSelect}>
-          <SelectTrigger id="saved-voice-select" className="w-full">
-            <SelectValue placeholder="Select one of your saved voices" />
-          </SelectTrigger>
-          <SelectContent>
-            {savedVoices.map((voice) => (
-              <SelectItem key={voice.id} value={voice.voice_id}>
-                {voice.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       <div className="flex space-x-2">
         <Button
           variant="outline"

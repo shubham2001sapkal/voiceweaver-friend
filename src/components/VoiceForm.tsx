@@ -1,13 +1,12 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { VoiceRecorder } from "./VoiceRecorder";
-import { elevenlabsService, SavedVoice } from "@/services/elevenlabs";
+import { elevenlabsService } from "@/services/elevenlabs";
 import { saveVoiceRecording } from "@/services/voiceService";
 import { Mic, Play, AlertCircle, Wand2, VolumeX, Volume2, ExternalLink, RefreshCw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -94,10 +93,8 @@ export function VoiceForm() {
       }
 
       try {
-        // Clone the voice
         const savedVoice = await elevenlabsService.cloneVoice(voiceSample, voiceName);
         
-        // Save to Supabase if user is logged in
         if (user) {
           await saveVoiceRecording({
             name: voiceName,
@@ -111,12 +108,10 @@ export function VoiceForm() {
           description: "Your voice has been successfully cloned and saved!",
         });
         
-        // Set submitted to refresh the form
         setIsSubmitted(true);
         setVoiceName("");
         setVoiceSample(null);
         
-        // Reload the page to refresh the voice list
         window.location.reload();
         
       } catch (error: any) {
@@ -287,12 +282,10 @@ export function VoiceForm() {
         )}
 
         <div className="space-y-4">
-          {/* Step 1: Record or Upload Voice with Name */}
           <div className="p-4 border rounded-lg bg-background">
             <h2 className="text-lg font-medium mb-4">Step 1: Create Your Voice</h2>
             
             <div className="space-y-4">
-              {/* Name your voice first */}
               <div>
                 <Label htmlFor="voice-name">Name your voice</Label>
                 <Input 
@@ -304,7 +297,6 @@ export function VoiceForm() {
                 />
               </div>
               
-              {/* Voice Sample second */}
               <div>
                 <Label htmlFor="voice-sample">Voice Sample</Label>
                 <div className="mt-2">
@@ -312,7 +304,6 @@ export function VoiceForm() {
                 </div>
               </div>
               
-              {/* Submit button third */}
               <div className="flex flex-wrap gap-4">
                 <Button
                   onClick={handleGenerateVoice}
@@ -340,12 +331,10 @@ export function VoiceForm() {
             </div>
           </div>
           
-          {/* Step 2: Use Your Voice */}
           <div className="p-4 border rounded-lg bg-background">
             <h2 className="text-lg font-medium mb-4">Step 2: Generate Speech</h2>
             
             <div className="space-y-4">
-              {/* Text input */}
               <div>
                 <Label htmlFor="text-input">What would you like to say?</Label>
                 <Textarea
@@ -357,15 +346,9 @@ export function VoiceForm() {
                 />
               </div>
               
-              {/* Use saved voices section */}
-              {isConnected && (
-                <SavedVoices onVoiceSelect={setSelectedVoiceId} text={text} />
-              )}
-              
-              {/* Preset voices */}
               {isConnected && availableVoices.length > 0 && (
                 <div>
-                  <Label htmlFor="voice-select">Or use a preset voice</Label>
+                  <Label htmlFor="voice-select">Select a voice</Label>
                   <div className="mt-2">
                     <Select value={selectedVoiceId} onValueChange={setSelectedVoiceId}>
                       <SelectTrigger>
@@ -383,7 +366,6 @@ export function VoiceForm() {
                 </div>
               )}
               
-              {/* Generate with preset voice */}
               {isConnected && selectedVoiceId && (
                 <Button
                   onClick={handleUsePresetVoice}
@@ -401,7 +383,14 @@ export function VoiceForm() {
                 </Button>
               )}
               
-              {/* Generated audio player */}
+              {isConnected && selectedVoiceId && (
+                <SavedVoices 
+                  onVoiceSelect={setSelectedVoiceId} 
+                  text={text} 
+                  selectedVoiceId={selectedVoiceId}
+                />
+              )}
+              
               {generatedAudio && (
                 <div className="mt-4 p-3 bg-secondary rounded-md flex items-center justify-between">
                   <span className="text-sm font-medium">Generated audio ready</span>
