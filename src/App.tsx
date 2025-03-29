@@ -29,9 +29,9 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <SupabaseProvider>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
           <BrowserRouter>
+            <Toaster />
+            <Sonner />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/signin" element={<SignIn />} />

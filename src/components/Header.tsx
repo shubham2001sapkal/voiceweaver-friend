@@ -6,7 +6,9 @@ import { Link } from "react-router-dom";
 import { useSupabase } from "@/context/SupabaseContext";
 
 export function Header() {
-  const { user } = useSupabase();
+  // Get the user from context, defaulting to null if context isn't ready yet
+  const supabaseContext = useSupabase();
+  const user = supabaseContext?.user || null;
 
   return (
     <header className="py-4 px-6 w-full border-b border-border/40 bg-secondary/30 backdrop-blur-sm">
@@ -49,7 +51,7 @@ export function Header() {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => {}}
+              onClick={() => supabaseContext.signOut()}
               className="flex items-center gap-1.5"
             >
               Profile
