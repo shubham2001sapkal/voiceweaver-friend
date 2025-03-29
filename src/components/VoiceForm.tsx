@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { VoiceRecorder } from "./VoiceRecorder";
 import { elevenlabsService } from "@/services/elevenlabs";
-import { Mic, Play, AlertCircle, Wand2, VolumeX, Volume2, ExternalLink } from "lucide-react";
+import { Mic, Play, AlertCircle, Wand2, VolumeX, Volume2, ExternalLink, Check } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useSupabase } from "@/context/SupabaseContext";
 
 export function VoiceForm() {
   const [voiceSample, setVoiceSample] = useState<Blob | null>(null);
@@ -22,6 +23,7 @@ export function VoiceForm() {
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
+  const { supabase } = useSupabase();
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -95,6 +97,7 @@ export function VoiceForm() {
         toast({
           title: "Voice Cloned Successfully",
           description: "Your voice has been cloned. Now generating speech...",
+          icon: <Check className="h-4 w-4 text-green-500" />,
         });
         
         const audioBlob = await elevenlabsService.textToSpeech(text, voiceId);
@@ -102,12 +105,28 @@ export function VoiceForm() {
         const audioUrl = URL.createObjectURL(audioBlob);
         setGeneratedAudio(audioUrl);
 
+        // Log success to Supabase
+        await supabase.from('voice_logs').insert({
+          text: text,
+          audio_url: audioUrl,
+          success: true
+        });
+
         toast({
-          title: "Voice Generated",
+          title: "Voice Generated Successfully",
           description: "Your text has been converted to speech with your voice!",
+          variant: "default",
+          className: "bg-green-100 border-green-400 dark:bg-green-900/20",
         });
       } catch (error: any) {
         if (error.message && error.message.includes("subscription does not include voice cloning")) {
+          // Log specific subscription error
+          await supabase.from('voice_logs').insert({
+            text: text,
+            success: false,
+            error_message: "Subscription does not include voice cloning"
+          });
+          
           toast({
             title: "Subscription Required",
             description: "Voice cloning requires a paid ElevenLabs subscription. Please upgrade your plan.",
@@ -119,8 +138,16 @@ export function VoiceForm() {
       }
     } catch (error: any) {
       console.error("Error generating voice:", error);
+      
+      // Log general error
+      await supabase.from('voice_logs').insert({
+        text: text || "Voice generation attempt",
+        success: false,
+        error_message: error.message || "Unknown error"
+      });
+      
       toast({
-        title: "Error",
+        title: "Voice Generation Failed",
         description: error.message || "Failed to generate voice. Please try again.",
         variant: "destructive",
       });
