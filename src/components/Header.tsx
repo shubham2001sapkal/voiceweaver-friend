@@ -1,5 +1,5 @@
 
-import { CodeSquare, Home, Info } from "lucide-react";
+import { CodeSquare, Home, Info, LogIn } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -24,6 +24,30 @@ export function Header() {
           </Link>
         </div>
         <div className="flex items-center gap-3">
+          {!user && (
+            <>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                asChild
+                className="flex items-center gap-1.5"
+              >
+                <Link to="/signin">
+                  <LogIn className="h-4 w-4" />
+                  Sign In
+                </Link>
+              </Button>
+              <Button 
+                size="sm" 
+                asChild
+                className="flex items-center gap-1.5"
+              >
+                <Link to="/signup">
+                  Sign Up
+                </Link>
+              </Button>
+            </>
+          )}
           <Button 
             variant="outline" 
             size="sm" 
