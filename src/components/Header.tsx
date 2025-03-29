@@ -1,5 +1,5 @@
 
-import { CodeSquare, LogIn, UserPlus } from "lucide-react";
+import { CodeSquare, Info } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
@@ -22,41 +22,17 @@ export function Header() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          {!user ? (
-            <>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                asChild
-                className="flex items-center gap-1.5"
-              >
-                <Link to="/signin">
-                  <LogIn className="h-4 w-4" />
-                  Sign In
-                </Link>
-              </Button>
-              <Button 
-                variant="default" 
-                size="sm" 
-                asChild
-                className="bg-voiceback-500 hover:bg-voiceback-600 text-white flex items-center gap-1.5"
-              >
-                <Link to="/signup">
-                  <UserPlus className="h-4 w-4" />
-                  Sign Up
-                </Link>
-              </Button>
-            </>
-          ) : (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => supabaseContext.signOut()}
-              className="flex items-center gap-1.5"
-            >
-              Profile
-            </Button>
-          )}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            asChild
+            className="flex items-center gap-1.5"
+          >
+            <Link to="/about">
+              <Info className="h-4 w-4" />
+              About Us
+            </Link>
+          </Button>
           <ThemeToggle />
         </div>
       </div>
