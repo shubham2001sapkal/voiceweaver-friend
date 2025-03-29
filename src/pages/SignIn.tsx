@@ -35,6 +35,10 @@ export default function SignIn() {
       setError(null);
       setIsLoading(true);
       await signIn(values.email, values.password);
+      
+      // After successful sign in, log user details
+      console.log("User signed in successfully");
+      
       navigate("/");
     } catch (error: any) {
       console.error("Sign in error:", error);

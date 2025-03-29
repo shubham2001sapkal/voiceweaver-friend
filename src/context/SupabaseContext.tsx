@@ -76,7 +76,7 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       
-      // First, create the auth user
+      // First, create the auth user with user metadata including full name
       const { data: authData, error: authError } = await supabase.auth.signUp({ 
         email, 
         password,
@@ -88,8 +88,27 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
       });
       
       if (authError) {
+        toast({
+          title: "Sign up failed",
+          description: authError.message || "An error occurred during sign up.",
+          variant: "destructive",
+        });
         throw authError;
       }
+      
+      // Check if the user was created successfully
+      if (!authData.user) {
+        const msg = "Failed to create user account";
+        toast({
+          title: "Sign up failed",
+          description: msg,
+          variant: "destructive",
+        });
+        throw new Error(msg);
+      }
+      
+      // Log to verify user data is created correctly
+      console.log("Created user with data:", authData.user);
       
       toast({
         title: "Account created",
