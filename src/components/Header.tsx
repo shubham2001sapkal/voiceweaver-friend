@@ -1,5 +1,5 @@
 
-import { CodeSquare, Home, Info } from "lucide-react";
+import { CodeSquare, Home, Info, LogIn, UserPlus } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "./ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -9,6 +9,7 @@ export function Header() {
   // Get the user from context, defaulting to null if context isn't ready yet
   const supabaseContext = useSupabase();
   const user = supabaseContext?.user || null;
+  const { signOut } = useSupabase();
   const location = useLocation();
   const isAboutPage = location.pathname === "/about";
 
@@ -24,6 +25,49 @@ export function Header() {
           </Link>
         </div>
         <div className="flex items-center gap-3">
+          {user ? (
+            // Show user email and logout button when logged in
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground hidden sm:inline">
+                {user.email}
+              </span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => signOut()}
+                className="text-destructive hover:text-destructive"
+              >
+                Log Out
+              </Button>
+            </div>
+          ) : (
+            // Show login and signup buttons when not logged in
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                asChild
+                className="flex items-center gap-1.5"
+              >
+                <Link to="/signin">
+                  <LogIn className="h-4 w-4" />
+                  Login
+                </Link>
+              </Button>
+              <Button 
+                variant="default" 
+                size="sm" 
+                asChild
+                className="flex items-center gap-1.5 bg-voiceback-500 hover:bg-voiceback-600"
+              >
+                <Link to="/signup">
+                  <UserPlus className="h-4 w-4" />
+                  Sign Up
+                </Link>
+              </Button>
+            </div>
+          )}
+          
           <Button 
             variant="outline" 
             size="sm" 
