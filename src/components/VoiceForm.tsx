@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { VoiceRecorder } from "./VoiceRecorder";
 import { elevenlabsService, SavedVoice } from "@/services/elevenlabs";
-import { saveVoiceRecording } from "@/services/voiceService";
+import { saveVoiceLog } from "@/services/voiceLogService";
 import { Mic, Play, AlertCircle, Wand2, VolumeX, Volume2, ExternalLink } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -107,7 +107,7 @@ export function VoiceForm() {
         
         // Save to Supabase if user is logged in
         if (user) {
-          await saveVoiceRecording({
+          await saveVoiceLog({
             name: voiceName,
             voice_id: savedVoice.voice_id,
             user_id: user.id
@@ -173,6 +173,30 @@ export function VoiceForm() {
       
       const audioUrl = URL.createObjectURL(audioBlob);
       setGeneratedAudio(audioUrl);
+      
+      // Log the voice usage to Supabase if user is logged in
+      if (user) {
+        // Find the voice name from available voices or saved voices
+        let voiceName = "Unknown Voice";
+        
+        // Check available voices first
+        const matchedVoice = availableVoices.find(voice => voice.voice_id === selectedVoiceId);
+        if (matchedVoice) {
+          voiceName = matchedVoice.name;
+        } else {
+          // Check saved voices
+          const savedVoice = elevenlabsService.getSavedVoices().find(voice => voice.voice_id === selectedVoiceId);
+          if (savedVoice) {
+            voiceName = savedVoice.name;
+          }
+        }
+        
+        await saveVoiceLog({
+          name: voiceName,
+          voice_id: selectedVoiceId,
+          user_id: user.id
+        });
+      }
 
       toast({
         title: "Voice Generated",
