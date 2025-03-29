@@ -13,7 +13,7 @@ export const saveVoiceRecording = async (recording: VoiceRecording) => {
   try {
     // Use a type assertion to bypass the type checking
     const { data, error } = await supabase
-      .from('voice_recordings')
+      .from('voice_recordings' as any)
       .insert([recording] as any)
       .select();
     

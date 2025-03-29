@@ -1,4 +1,3 @@
-
 import { createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -128,22 +127,8 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
 
   const checkConnection = async (): Promise<boolean> => {
     try {
-      // Use raw query approach instead of table name to avoid type issues
-      const { error } = await supabase.rpc('check_connection');
-      
-      if (error) {
-        console.error("Supabase connection check failed:", error);
-        // Try a simpler approach as fallback
-        try {
-          const { data: authData } = await supabase.auth.getSession();
-          // If we get here, connection is working
-          return true;
-        } catch (fallbackError) {
-          console.error("Fallback connection check failed:", fallbackError);
-          return false;
-        }
-      }
-      
+      // Use a simple auth check instead of RPC
+      const { data } = await supabase.auth.getSession();
       return true;
     } catch (error) {
       console.error("Supabase connection check failed:", error);
