@@ -1,10 +1,9 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { VoiceRecorder } from "./VoiceRecorder";
 import { elevenlabsService } from "@/services/elevenlabs";
-import { Mic, Play, AlertCircle, Wand2, VolumeX, Volume2, ExternalLink, Check } from "lucide-react";
+import { Mic, Play, AlertCircle, Wand2, VolumeX, Volume2, ExternalLink } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -97,7 +96,6 @@ export function VoiceForm() {
         toast({
           title: "Voice Cloned Successfully",
           description: "Your voice has been cloned. Now generating speech...",
-          icon: <Check className="h-4 w-4 text-green-500" />,
         });
         
         const audioBlob = await elevenlabsService.textToSpeech(text, voiceId);
