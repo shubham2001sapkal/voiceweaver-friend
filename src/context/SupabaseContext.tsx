@@ -1,3 +1,4 @@
+
 import { createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
@@ -9,7 +10,7 @@ type SupabaseContextType = {
   user: User | null;
   session: Session | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
   checkConnection: () => Promise<boolean>;
@@ -44,14 +45,9 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
-        toast({
-          title: "Sign in failed",
-          description: "Email or password is incorrect.",
-          variant: "destructive",
-        });
         throw error;
       }
       
@@ -71,47 +67,14 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string) => {
     try {
       setLoading(true);
+      const { error } = await supabase.auth.signUp({ email, password });
       
-      console.log("Signing up with full name:", fullName); // Debug log
-      
-      // First, create the auth user with user metadata including full name
-      const { data: authData, error: authError } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          }
-        }
-      });
-      
-      if (authError) {
-        toast({
-          title: "Sign up failed",
-          description: authError.message || "An error occurred during sign up.",
-          variant: "destructive",
-        });
-        throw authError;
+      if (error) {
+        throw error;
       }
-      
-      // Check if the user was created successfully
-      if (!authData.user) {
-        const msg = "Failed to create user account";
-        toast({
-          title: "Sign up failed",
-          description: msg,
-          variant: "destructive",
-        });
-        throw new Error(msg);
-      }
-      
-      // Now attempt to create a profile entry using service role if available
-      // or have user wait for server-side function to create profile
-      console.log("Auth completed successfully, user created with ID:", authData.user.id);
-      console.log("User metadata contains full_name:", authData.user.user_metadata.full_name);
       
       toast({
         title: "Account created",
