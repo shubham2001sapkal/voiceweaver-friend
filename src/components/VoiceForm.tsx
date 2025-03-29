@@ -1,15 +1,15 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { VoiceRecorder } from "./VoiceRecorder";
 import { elevenlabsService } from "@/services/elevenlabs";
-import { Mic, Play, AlertCircle, Wand2, VolumeX, Volume2 } from "lucide-react";
+import { Mic, Play, AlertCircle, Wand2, VolumeX, Volume2, ExternalLink } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export function VoiceForm() {
   const [voiceSample, setVoiceSample] = useState<Blob | null>(null);
@@ -25,7 +25,6 @@ export function VoiceForm() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
 
-  // Check connection and fetch voices when component mounts
   useEffect(() => {
     const checkConnection = async () => {
       const apiKey = elevenlabsService.getApiKey();
@@ -81,27 +80,35 @@ export function VoiceForm() {
     try {
       setIsLoading(true);
 
-      // Check if we have an API key
       if (!elevenlabsService.getApiKey()) {
         setIsSettingsOpen(true);
         setIsLoading(false);
         return;
       }
 
-      // Clone the voice
-      const voiceId = await elevenlabsService.cloneVoice(voiceSample, "My Voice");
-      
-      // Then use the cloned voice for the text to speech
-      const audioBlob = await elevenlabsService.textToSpeech(text, voiceId);
-      
-      // Create a URL for the audio blob
-      const audioUrl = URL.createObjectURL(audioBlob);
-      setGeneratedAudio(audioUrl);
+      try {
+        const voiceId = await elevenlabsService.cloneVoice(voiceSample, "My Voice");
+        
+        const audioBlob = await elevenlabsService.textToSpeech(text, voiceId);
+        
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setGeneratedAudio(audioUrl);
 
-      toast({
-        title: "Voice Generated",
-        description: "Your text has been converted to speech with your voice!",
-      });
+        toast({
+          title: "Voice Generated",
+          description: "Your text has been converted to speech with your voice!",
+        });
+      } catch (error: any) {
+        if (error.message && error.message.includes("subscription does not include voice cloning")) {
+          toast({
+            title: "Subscription Required",
+            description: "Voice cloning requires a paid ElevenLabs subscription. Try using a preset voice instead.",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+      }
     } catch (error: any) {
       console.error("Error generating voice:", error);
       toast({
@@ -136,10 +143,8 @@ export function VoiceForm() {
     try {
       setIsLoading(true);
 
-      // Use the selected voice for text to speech
       const audioBlob = await elevenlabsService.textToSpeech(text, selectedVoiceId);
       
-      // Create a URL for the audio blob
       const audioUrl = URL.createObjectURL(audioBlob);
       setGeneratedAudio(audioUrl);
 
@@ -183,7 +188,6 @@ export function VoiceForm() {
       setIsSettingsOpen(false);
       
       try {
-        // Test connection with the new API key
         const voices = await elevenlabsService.getAvailableVoices();
         setAvailableVoices(voices);
         setIsConnected(true);
@@ -238,6 +242,25 @@ export function VoiceForm() {
           )}
         </div>
 
+        {isConnected && (
+          <Alert className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Subscription Notice</AlertTitle>
+            <AlertDescription>
+              Voice cloning requires a paid ElevenLabs subscription. If you don't have one,
+              you can still use the preset voices.{" "}
+              <a 
+                href="https://elevenlabs.io/subscription" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center text-primary underline hover:text-primary/90"
+              >
+                Upgrade your plan <ExternalLink className="ml-1 h-3 w-3" />
+              </a>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="space-y-4">
           <div>
             <Label htmlFor="voice-sample">Voice Sample</Label>
@@ -287,6 +310,7 @@ export function VoiceForm() {
               onClick={handleGenerateVoice}
               className="bg-voiceback hover:bg-voiceback/90"
               disabled={isLoading || !isConnected}
+              title={!isConnected ? "Connect to ElevenLabs first" : ""}
             >
               {isLoading ? (
                 "Generating..."

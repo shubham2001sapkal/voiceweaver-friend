@@ -68,7 +68,13 @@ export class ElevenLabsService {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`Failed to clone voice: ${errorData.detail || response.statusText}`);
+        
+        // Handle subscription-related errors specifically
+        if (errorData.detail && errorData.detail.status === "can_not_use_instant_voice_cloning") {
+          throw new Error("Your ElevenLabs subscription does not include voice cloning. Please upgrade your plan.");
+        }
+        
+        throw new Error(`Failed to clone voice: ${errorData.detail?.message || errorData.detail || response.statusText}`);
       }
 
       const data = await response.json();
@@ -104,8 +110,16 @@ export class ElevenLabsService {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to convert text to speech: ${errorText}`);
+        const errorData = await response.text();
+        try {
+          const parsedError = JSON.parse(errorData);
+          if (parsedError.detail) {
+            throw new Error(`Failed to convert text to speech: ${parsedError.detail.message || parsedError.detail}`);
+          }
+        } catch (e) {
+          // If parsing fails, use the original error text
+        }
+        throw new Error(`Failed to convert text to speech: ${errorData}`);
       }
 
       return await response.blob();
@@ -145,4 +159,3 @@ export class ElevenLabsService {
 export const elevenlabsService = new ElevenLabsService({
   apiKey: "sk_1549aa8a13b90c1128e6ff54e26dda966df9b615fb3c364e"
 });
-
