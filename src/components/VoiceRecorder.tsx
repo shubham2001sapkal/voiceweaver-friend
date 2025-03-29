@@ -8,10 +8,28 @@ import { useVoiceStorageService } from "@/services/voiceStorageService";
 export function VoiceRecorder({ onSampleReady }: { onSampleReady: (blob: Blob) => void }) {
   const { supabase } = useSupabase();
   const { saveVoiceSampleToSupabase } = useVoiceStorageService(supabase);
+  const [localAudioUrl, setLocalAudioUrl] = useState<string | null>(null);
+
+  const createLocalAudioUrl = (blob: Blob): string => {
+    // Clean up previous URL if it exists
+    if (localAudioUrl) {
+      URL.revokeObjectURL(localAudioUrl);
+    }
+    // Create a new URL for local playback
+    const url = URL.createObjectURL(blob);
+    setLocalAudioUrl(url);
+    return url;
+  };
 
   const handleRecordingComplete = async (blob: Blob) => {
+    // Create local URL for audio playback
+    createLocalAudioUrl(blob);
+    
+    // Pass blob to parent component
     onSampleReady(blob);
+    
     try {
+      console.log("Saving recording to Supabase...");
       await saveVoiceSampleToSupabase(blob);
     } catch (error) {
       console.error("Error saving recording to Supabase:", error);
@@ -19,8 +37,14 @@ export function VoiceRecorder({ onSampleReady }: { onSampleReady: (blob: Blob) =
   };
 
   const handleFileUploaded = async (blob: Blob) => {
+    // Create local URL for audio playback
+    createLocalAudioUrl(blob);
+    
+    // Pass blob to parent component
     onSampleReady(blob);
+    
     try {
+      console.log("Saving uploaded file to Supabase...");
       await saveVoiceSampleToSupabase(blob);
     } catch (error) {
       console.error("Error saving uploaded file to Supabase:", error);
@@ -33,6 +57,12 @@ export function VoiceRecorder({ onSampleReady }: { onSampleReady: (blob: Blob) =
         <RecordingControls onRecordingComplete={handleRecordingComplete} />
         <AudioFileUpload onFileUploaded={handleFileUploaded} />
       </div>
+      
+      {localAudioUrl && (
+        <div className="mt-4 text-center">
+          <audio controls src={localAudioUrl} className="mx-auto"></audio>
+        </div>
+      )}
     </div>
   );
 }

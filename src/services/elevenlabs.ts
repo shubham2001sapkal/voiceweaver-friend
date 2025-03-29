@@ -25,15 +25,25 @@ export class ElevenLabsService {
       };
       console.log('Logging voice generation to Supabase:', logData);
       
-      await supabase.from('voice_logs').insert([{
+      // Make sure we're inserting the actual audio_data, not the placeholder
+      const realData = {
         text: logEntry.text,
         audio_data: logEntry.audio_data || null,
         audio_url: logEntry.audio_url || null,
         type: logEntry.type || 'generated_speech',
         success: logEntry.success,
         error_message: logEntry.error_message || null
-        // Let created_at be handled by Supabase's default value
-      }]);
+      };
+      
+      console.log('Columns being inserted:', Object.keys(realData));
+      
+      const { data, error } = await supabase.from('voice_logs').insert([realData]);
+      
+      if (error) {
+        console.error('Error inserting voice log:', error);
+      } else {
+        console.log('Voice log inserted successfully:', data);
+      }
     } catch (error) {
       console.error('Failed to log voice generation:', error);
       // We don't throw here to avoid breaking the main functionality
@@ -41,10 +51,11 @@ export class ElevenLabsService {
   }
 
   // Method to save voice sample to Supabase
-  public async saveVoiceSample(text: string, audioData: string): Promise<void> {
+  public async saveVoiceSample(text: string, audioData: string, audioUrl?: string): Promise<void> {
     await this.logVoiceGeneration({
       text: text,
       audio_data: audioData,
+      audio_url: audioUrl || null,
       type: 'voice_sample',
       success: true
     });
@@ -60,9 +71,11 @@ export class ElevenLabsService {
         .order('created_at', { ascending: false });
 
       if (error) {
+        console.error('Error fetching voice samples:', error);
         throw error;
       }
 
+      console.log('Retrieved voice samples:', data?.length || 0);
       return data || [];
     } catch (error) {
       console.error('Error fetching voice samples:', error);

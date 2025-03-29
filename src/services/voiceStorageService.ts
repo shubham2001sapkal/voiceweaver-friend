@@ -18,11 +18,14 @@ export function useVoiceStorageService(supabase: any) {
             // The result contains the base64 encoded data
             const base64data = reader.result as string;
             
+            // Create a URL for playback (this is optional but can be useful)
+            const audioUrl = URL.createObjectURL(blob);
+            
             // Prepare the data to be sent to Supabase
             const voiceLogData = {
               text: 'Voice sample recording',
               audio_data: base64data,
-              audio_url: null, // We're storing the data directly, not a URL
+              audio_url: audioUrl, // Now we're storing the URL as well
               type: 'voice_sample'
             };
             
