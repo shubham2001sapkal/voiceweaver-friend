@@ -13,6 +13,7 @@ export interface VoiceLogEntry {
   audio_url?: string;
   success: boolean;
   error_message?: string;
+  type?: 'voice_sample' | 'generated_speech' | 'error';
 }
 
 export class ElevenLabsService {
@@ -60,6 +61,9 @@ export class ElevenLabsService {
       await supabase.from('voice_logs').insert([{
         text: logEntry.text,
         audio_url: logEntry.audio_url || null,
+        success: logEntry.success,
+        error_message: logEntry.error_message || null,
+        type: logEntry.type || 'generated_speech'
         // Let created_at be handled by Supabase's default value
       }]);
     } catch (error) {
@@ -100,7 +104,8 @@ export class ElevenLabsService {
           await this.logVoiceGeneration({
             text: "Voice cloning attempt",
             success: false,
-            error_message: "Subscription does not include voice cloning"
+            error_message: "Subscription does not include voice cloning",
+            type: 'error'
           });
           throw new Error("Your ElevenLabs subscription does not include voice cloning. Please upgrade your plan.");
         }
@@ -109,7 +114,8 @@ export class ElevenLabsService {
         await this.logVoiceGeneration({
           text: "Voice cloning attempt",
           success: false,
-          error_message: errorMessage
+          error_message: errorMessage,
+          type: 'error'
         });
         
         throw new Error(`Failed to clone voice: ${errorMessage}`);
@@ -119,7 +125,8 @@ export class ElevenLabsService {
       
       await this.logVoiceGeneration({
         text: "Voice cloning successful",
-        success: true
+        success: true,
+        type: 'voice_sample'
       });
       
       return data.voice_id;

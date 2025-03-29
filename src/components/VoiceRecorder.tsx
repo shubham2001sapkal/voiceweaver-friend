@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, Square, Upload } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useSupabase } from "@/context/SupabaseContext";
 
 export function VoiceRecorder({ onSampleReady }: { onSampleReady: (blob: Blob) => void }) {
   const [isRecording, setIsRecording] = useState(false);
@@ -11,6 +12,41 @@ export function VoiceRecorder({ onSampleReady }: { onSampleReady: (blob: Blob) =
   const [recordingTime, setRecordingTime] = useState(0);
   const [recordingInterval, setRecordingInterval] = useState<number | null>(null);
   const { toast } = useToast();
+  const { supabase } = useSupabase();
+
+  const saveVoiceSampleToSupabase = async (blob: Blob): Promise<void> => {
+    try {
+      // Create a URL for the blob
+      const url = URL.createObjectURL(blob);
+      
+      // Insert the voice sample record
+      const { error } = await supabase.from('voice_logs').insert({
+        type: 'voice_sample',
+        text: 'Voice sample recording',
+        audio_url: url,
+        success: true
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Voice Sample Saved",
+        description: "Your voice sample was successfully saved to the database.",
+        variant: "default",
+        className: "bg-green-100 border-green-400 dark:bg-green-900/20",
+      });
+    } catch (error: any) {
+      console.error('Failed to save voice sample:', error);
+      
+      toast({
+        title: "Failed to Save Voice Sample",
+        description: error.message || "There was an error saving your voice sample.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const startRecording = async () => {
     try {
@@ -80,6 +116,8 @@ export function VoiceRecorder({ onSampleReady }: { onSampleReady: (blob: Blob) =
         file.arrayBuffer().then(buffer => {
           const blob = new Blob([buffer], { type: file.type });
           onSampleReady(blob);
+          // Save voice sample to Supabase
+          saveVoiceSampleToSupabase(blob);
           toast({
             title: "Voice Sample Uploaded",
             description: `File "${file.name}" has been successfully uploaded.`,

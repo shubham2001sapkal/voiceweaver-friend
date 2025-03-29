@@ -20,6 +20,8 @@ export function VoiceForm() {
   const [apiKey, setApiKey] = useState(elevenlabsService.getApiKey() || "");
   const [isConnected, setIsConnected] = useState<boolean>(!!elevenlabsService.getApiKey());
   const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [savedVoiceSamples, setSavedVoiceSamples] = useState<any[]>([]);
+  const [selectedSavedVoice, setSelectedSavedVoice] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
   const { supabase } = useSupabase();
@@ -50,12 +52,42 @@ export function VoiceForm() {
     };
     
     checkConnection();
+    fetchSavedVoiceSamples();
   }, [toast]);
+
+  const fetchSavedVoiceSamples = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('voice_logs')
+        .select('*')
+        .eq('type', 'voice_sample')
+        .eq('success', true)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data && data.length > 0) {
+        setSavedVoiceSamples(data);
+        toast({
+          title: "Voice Samples Retrieved",
+          description: `Found ${data.length} saved voice samples.`,
+        });
+      }
+    } catch (error: any) {
+      console.error("Error fetching voice samples:", error);
+      toast({
+        title: "Failed to Retrieve Voice Samples",
+        description: error.message || "There was an error retrieving your saved voice samples.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleSampleReady = (blob: Blob) => {
     setVoiceSample(blob);
     
-    // Show confirmation toast that voice sample is ready
     toast({
       title: "Voice Sample Ready",
       description: "Your voice sample is ready for cloning.",
@@ -63,10 +95,10 @@ export function VoiceForm() {
   };
 
   const handleGenerateVoice = async () => {
-    if (!voiceSample) {
+    if (!voiceSample && !selectedSavedVoice) {
       toast({
         title: "Missing Voice Sample",
-        description: "Please upload or record a voice sample first.",
+        description: "Please upload, record, or select a saved voice sample first.",
         variant: "destructive",
       });
       return;
@@ -91,7 +123,29 @@ export function VoiceForm() {
       }
 
       try {
-        const voiceId = await elevenlabsService.cloneVoice(voiceSample, "My Voice");
+        let voiceId;
+        
+        if (selectedSavedVoice && !voiceSample) {
+          const selectedVoice = savedVoiceSamples.find(sample => sample.id === selectedSavedVoice);
+          if (selectedVoice && selectedVoice.audio_url) {
+            try {
+              const response = await fetch(selectedVoice.audio_url);
+              const audioBlob = await response.blob();
+              voiceId = await elevenlabsService.cloneVoice(audioBlob, "Saved Voice");
+              
+              toast({
+                title: "Saved Voice Retrieved",
+                description: "Successfully retrieved your saved voice sample.",
+              });
+            } catch (error: any) {
+              throw new Error(`Failed to retrieve saved voice sample: ${error.message}`);
+            }
+          } else {
+            throw new Error("Selected voice sample not found or invalid.");
+          }
+        } else {
+          voiceId = await elevenlabsService.cloneVoice(voiceSample!, "My Voice");
+        }
         
         toast({
           title: "Voice Cloned Successfully",
@@ -103,11 +157,11 @@ export function VoiceForm() {
         const audioUrl = URL.createObjectURL(audioBlob);
         setGeneratedAudio(audioUrl);
 
-        // Log success to Supabase
         await supabase.from('voice_logs').insert({
           text: text,
           audio_url: audioUrl,
-          success: true
+          success: true,
+          type: 'generated_speech'
         });
 
         toast({
@@ -118,11 +172,11 @@ export function VoiceForm() {
         });
       } catch (error: any) {
         if (error.message && error.message.includes("subscription does not include voice cloning")) {
-          // Log specific subscription error
           await supabase.from('voice_logs').insert({
             text: text,
             success: false,
-            error_message: "Subscription does not include voice cloning"
+            error_message: "Subscription does not include voice cloning",
+            type: 'error'
           });
           
           toast({
@@ -137,11 +191,11 @@ export function VoiceForm() {
     } catch (error: any) {
       console.error("Error generating voice:", error);
       
-      // Log general error
       await supabase.from('voice_logs').insert({
         text: text || "Voice generation attempt",
         success: false,
-        error_message: error.message || "Unknown error"
+        error_message: error.message || "Unknown error",
+        type: 'error'
       });
       
       toast({
@@ -204,6 +258,16 @@ export function VoiceForm() {
     }
   };
 
+  const handleSelectSavedVoice = (voiceId: string) => {
+    setSelectedSavedVoice(voiceId);
+    setVoiceSample(null);
+    
+    toast({
+      title: "Saved Voice Selected",
+      description: "You'll use this saved voice sample for generation.",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
@@ -261,6 +325,29 @@ export function VoiceForm() {
               </p>
             )}
           </div>
+          
+          {savedVoiceSamples.length > 0 && (
+            <div>
+              <Label>Saved Voice Samples</Label>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {savedVoiceSamples.slice(0, 5).map((sample) => (
+                  <Button
+                    key={sample.id}
+                    variant={selectedSavedVoice === sample.id ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleSelectSavedVoice(sample.id)}
+                  >
+                    {new Date(sample.created_at).toLocaleDateString()}
+                  </Button>
+                ))}
+              </div>
+              {selectedSavedVoice && (
+                <p className="text-sm text-green-600 dark:text-green-400 mt-2">
+                  ✓ Using saved voice sample
+                </p>
+              )}
+            </div>
+          )}
 
           <div>
             <Label htmlFor="text-input">What would you like to say?</Label>
@@ -277,7 +364,7 @@ export function VoiceForm() {
             <Button
               onClick={handleGenerateVoice}
               className="bg-voiceback hover:bg-voiceback/90"
-              disabled={isLoading || !isConnected}
+              disabled={isLoading || !isConnected || (!voiceSample && !selectedSavedVoice)}
               title={!isConnected ? "Connect to ElevenLabs first" : ""}
             >
               {isLoading ? (
