@@ -9,7 +9,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { LogIn } from "lucide-react";
 import { Header } from "@/components/Header";
 
 const formSchema = z.object({
@@ -18,7 +17,7 @@ const formSchema = z.object({
 });
 
 export default function SignIn() {
-  const { signIn, supabase } = useSupabase();
+  const { signIn } = useSupabase();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -41,24 +40,6 @@ export default function SignIn() {
       setIsLoading(false);
     }
   }
-
-  const handleGoogleSignIn = async () => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/`,
-        },
-      });
-      
-      if (error) throw error;
-    } catch (error) {
-      console.error("Google sign in error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -105,25 +86,6 @@ export default function SignIn() {
                 </Button>
               </form>
             </Form>
-            
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border"></div>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-              </div>
-            </div>
-            
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={handleGoogleSignIn}
-              disabled={isLoading}
-            >
-              <LogIn className="mr-2 h-4 w-4" />
-              Google
-            </Button>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-center text-sm">

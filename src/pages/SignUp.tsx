@@ -9,10 +9,10 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { LogIn } from "lucide-react";
 import { Header } from "@/components/Header";
 
 const formSchema = z.object({
+  fullName: z.string().min(2, { message: "Full name must be at least 2 characters" }),
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
   confirmPassword: z.string().min(6, { message: "Password must be at least 6 characters" }),
@@ -22,13 +22,14 @@ const formSchema = z.object({
 });
 
 export default function SignUp() {
-  const { signUp, supabase } = useSupabase();
+  const { signUp } = useSupabase();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      fullName: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -47,24 +48,6 @@ export default function SignUp() {
     }
   }
 
-  const handleGoogleSignIn = async () => {
-    try {
-      setIsLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/`,
-        },
-      });
-      
-      if (error) throw error;
-    } catch (error) {
-      console.error("Google sign in error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -79,6 +62,19 @@ export default function SignUp() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="email"
@@ -123,25 +119,6 @@ export default function SignUp() {
                 </Button>
               </form>
             </Form>
-            
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border"></div>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-              </div>
-            </div>
-            
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={handleGoogleSignIn}
-              disabled={isLoading}
-            >
-              <LogIn className="mr-2 h-4 w-4" />
-              Google
-            </Button>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-center text-sm">
