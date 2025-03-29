@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { VoiceRecorder } from "./VoiceRecorder";
 import { elevenlabsService, SavedVoice } from "@/services/elevenlabs";
 import { saveVoiceRecording } from "@/services/voiceService";
-import { Mic, Play, AlertCircle, Wand2, VolumeX, Volume2, ExternalLink } from "lucide-react";
+import { Mic, Play, AlertCircle, Wand2, VolumeX, Volume2, ExternalLink, RefreshCw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ export function VoiceForm() {
   const [isConnected, setIsConnected] = useState<boolean>(!!elevenlabsService.getApiKey());
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [voiceName, setVoiceName] = useState<string>("");
+  const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
   const { user } = useSupabase();
@@ -74,15 +75,6 @@ export function VoiceForm() {
       return;
     }
 
-    if (!text.trim()) {
-      toast({
-        title: "Missing Text",
-        description: "Please enter the text you want to convert to speech.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (!voiceName.trim()) {
       toast({
         title: "Missing Voice Name",
@@ -114,16 +106,19 @@ export function VoiceForm() {
           });
         }
         
-        // Generate speech with the cloned voice
-        const audioBlob = await elevenlabsService.textToSpeech(text, savedVoice.voice_id);
-        
-        const audioUrl = URL.createObjectURL(audioBlob);
-        setGeneratedAudio(audioUrl);
-
         toast({
-          title: "Voice Generated",
-          description: "Your text has been converted to speech with your voice!",
+          title: "Voice Saved",
+          description: "Your voice has been successfully cloned and saved!",
         });
+        
+        // Set submitted to refresh the form
+        setIsSubmitted(true);
+        setVoiceName("");
+        setVoiceSample(null);
+        
+        // Reload the page to refresh the voice list
+        window.location.reload();
+        
       } catch (error: any) {
         if (error.message && error.message.includes("subscription does not include voice cloning")) {
           toast({
@@ -241,6 +236,10 @@ export function VoiceForm() {
     }
   };
 
+  const refreshPage = () => {
+    window.location.reload();
+  };
+
   return (
     <div className="space-y-6">
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
@@ -288,13 +287,13 @@ export function VoiceForm() {
         )}
 
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="voice-sample">Voice Sample</Label>
-            <div className="mt-2">
-              <VoiceRecorder onSampleReady={handleSampleReady} />
-            </div>
-            {voiceSample && (
-              <div className="mt-2">
+          {/* Step 1: Record or Upload Voice with Name */}
+          <div className="p-4 border rounded-lg bg-background">
+            <h2 className="text-lg font-medium mb-4">Step 1: Create Your Voice</h2>
+            
+            <div className="space-y-4">
+              {/* Name your voice first */}
+              <div>
                 <Label htmlFor="voice-name">Name your voice</Label>
                 <Input 
                   id="voice-name" 
@@ -304,109 +303,138 @@ export function VoiceForm() {
                   className="mt-1"
                 />
               </div>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="text-input">What would you like to say?</Label>
-            <Textarea
-              id="text-input"
-              placeholder="Type what you want to say..."
-              className="mt-2 min-h-[100px]"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-            />
-          </div>
-
-          {/* Use your saved voices section */}
-          {isConnected && (
-            <SavedVoices onVoiceSelect={setSelectedVoiceId} text={text} />
-          )}
-
-          {isConnected && availableVoices.length > 0 && (
-            <div>
-              <Label htmlFor="voice-select">Or use a preset voice</Label>
-              <div className="mt-2">
-                <Select value={selectedVoiceId} onValueChange={setSelectedVoiceId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a voice" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableVoices.map(voice => (
-                      <SelectItem key={voice.voice_id} value={voice.voice_id}>
-                        {voice.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              
+              {/* Voice Sample second */}
+              <div>
+                <Label htmlFor="voice-sample">Voice Sample</Label>
+                <div className="mt-2">
+                  <VoiceRecorder onSampleReady={handleSampleReady} />
+                </div>
               </div>
-            </div>
-          )}
-
-          <div className="flex flex-wrap gap-4">
-            <Button
-              onClick={handleGenerateVoice}
-              className="bg-voiceback hover:bg-voiceback/90"
-              disabled={isLoading || !isConnected || !voiceSample || !voiceName.trim()}
-              title={!isConnected ? "Connect to ElevenLabs first" : ""}
-            >
-              {isLoading ? (
-                "Generating..."
-              ) : (
-                <>
-                  <Wand2 className="h-4 w-4 mr-2" /> Clone & Generate Voice
-                </>
-              )}
-            </Button>
-
-            {isConnected && selectedVoiceId && (
-              <Button
-                onClick={handleUsePresetVoice}
-                variant="outline"
-                disabled={isLoading || !isConnected}
-              >
-                {isLoading ? (
-                  "Generating..."
-                ) : (
-                  <>
-                    <Volume2 className="h-4 w-4 mr-2" /> Use Preset Voice
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-
-          {generatedAudio && (
-            <div className="mt-4 p-3 bg-secondary rounded-md flex items-center justify-between">
-              <span className="text-sm font-medium">Generated audio ready</span>
-              <div className="flex gap-2 items-center">
+              
+              {/* Submit button third */}
+              <div className="flex flex-wrap gap-4">
                 <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={toggleMute}
-                  className="w-8 h-8"
+                  onClick={handleGenerateVoice}
+                  className="bg-voiceback hover:bg-voiceback/90"
+                  disabled={isLoading || !isConnected || !voiceSample || !voiceName.trim()}
+                  title={!isConnected ? "Connect to ElevenLabs first" : ""}
                 >
-                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                  {isLoading ? (
+                    "Saving..."
+                  ) : (
+                    <>
+                      <Wand2 className="h-4 w-4 mr-2" /> Clone & Save Voice
+                    </>
+                  )}
                 </Button>
+                
                 <Button
-                  size="sm"
+                  onClick={refreshPage}
                   variant="outline"
-                  onClick={playAudio}
-                  className="flex items-center gap-1"
+                  className="flex items-center gap-2"
                 >
-                  <Play className="h-4 w-4" /> Play
+                  <RefreshCw className="h-4 w-4" /> Refresh Voices
                 </Button>
-                <a
-                  href={generatedAudio}
-                  download="voiceback-generated.mp3"
-                  className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground"
-                >
-                  Download
-                </a>
               </div>
-              <audio ref={audioRef} src={generatedAudio} />
             </div>
-          )}
+          </div>
+          
+          {/* Step 2: Use Your Voice */}
+          <div className="p-4 border rounded-lg bg-background">
+            <h2 className="text-lg font-medium mb-4">Step 2: Generate Speech</h2>
+            
+            <div className="space-y-4">
+              {/* Text input */}
+              <div>
+                <Label htmlFor="text-input">What would you like to say?</Label>
+                <Textarea
+                  id="text-input"
+                  placeholder="Type what you want to say..."
+                  className="mt-2 min-h-[100px]"
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                />
+              </div>
+              
+              {/* Use saved voices section */}
+              {isConnected && (
+                <SavedVoices onVoiceSelect={setSelectedVoiceId} text={text} />
+              )}
+              
+              {/* Preset voices */}
+              {isConnected && availableVoices.length > 0 && (
+                <div>
+                  <Label htmlFor="voice-select">Or use a preset voice</Label>
+                  <div className="mt-2">
+                    <Select value={selectedVoiceId} onValueChange={setSelectedVoiceId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a voice" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableVoices.map(voice => (
+                          <SelectItem key={voice.voice_id} value={voice.voice_id}>
+                            {voice.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+              
+              {/* Generate with preset voice */}
+              {isConnected && selectedVoiceId && (
+                <Button
+                  onClick={handleUsePresetVoice}
+                  variant="outline"
+                  disabled={isLoading || !isConnected}
+                  className="w-full"
+                >
+                  {isLoading ? (
+                    "Generating..."
+                  ) : (
+                    <>
+                      <Volume2 className="h-4 w-4 mr-2" /> Generate Speech with Selected Voice
+                    </>
+                  )}
+                </Button>
+              )}
+              
+              {/* Generated audio player */}
+              {generatedAudio && (
+                <div className="mt-4 p-3 bg-secondary rounded-md flex items-center justify-between">
+                  <span className="text-sm font-medium">Generated audio ready</span>
+                  <div className="flex gap-2 items-center">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={toggleMute}
+                      className="w-8 h-8"
+                    >
+                      {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={playAudio}
+                      className="flex items-center gap-1"
+                    >
+                      <Play className="h-4 w-4" /> Play
+                    </Button>
+                    <a
+                      href={generatedAudio}
+                      download="voiceback-generated.mp3"
+                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                    >
+                      Download
+                    </a>
+                  </div>
+                  <audio ref={audioRef} src={generatedAudio} />
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="text-center mt-8 text-sm text-muted-foreground italic">
