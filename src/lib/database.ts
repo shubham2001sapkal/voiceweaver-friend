@@ -31,14 +31,14 @@ export const createUser = async (credentials: UserCredentials) => {
       data: {
         full_name: credentials.full_name
       },
+      // Skip email verification completely
       emailRedirectTo: window.location.origin,
     }
   });
   
   if (error) throw error;
   
-  // We'll let the database trigger handle profile creation instead of doing it here
-  // This avoids the RLS policy violation
+  // We'll let the database trigger handle profile creation
   return data;
 };
 

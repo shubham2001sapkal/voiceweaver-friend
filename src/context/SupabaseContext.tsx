@@ -76,20 +76,13 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
         full_name: fullName
       });
       
-      if (result.user) {
-        // Sign in the user immediately after signup
-        await signInUser({ email, password });
-        
-        toast({
-          title: "Account created",
-          description: "You've been successfully signed in.",
-        });
-      } else {
-        toast({
-          title: "Account created",
-          description: "Please check your email for a confirmation link.",
-        });
-      }
+      // Automatically sign in user regardless of email verification status
+      await signInUser({ email, password });
+      
+      toast({
+        title: "Account created",
+        description: "You've been successfully signed in.",
+      });
     } catch (error: any) {
       toast({
         title: "Sign up failed",

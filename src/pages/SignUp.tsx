@@ -35,7 +35,8 @@ export default function SignUp() {
     try {
       setLoading(true);
       await signUp(email, password, fullName);
-      navigate("/signin");
+      // After successful signup, we are automatically signed in and redirected to home
+      navigate("/");
     } catch (error: any) {
       console.error("Sign up error:", error);
       setError(error.message || "An error occurred during sign up");
