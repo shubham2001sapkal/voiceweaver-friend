@@ -1,4 +1,3 @@
-
 import { Header } from "@/components/Header";
 import { VoiceForm } from "@/components/VoiceForm";
 import { Footer } from "@/components/Footer";
@@ -6,7 +5,7 @@ import { useSupabase } from "@/context/SupabaseContext";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { InfoCircle, AlertTriangle, CheckCircle } from "lucide-react";
+import { Info, AlertTriangle, CheckCircle } from "lucide-react";
 
 const Index = () => {
   const { checkConnection, supabase } = useSupabase();

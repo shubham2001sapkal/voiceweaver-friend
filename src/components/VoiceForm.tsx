@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -6,7 +5,7 @@ import { useSupabase } from "@/context/SupabaseContext";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { elevenLabsService, VoiceLogEntry } from "@/services/elevenlabs";
-import { InfoCircle } from "lucide-react";
+import { Info } from "lucide-react";
 
 export function VoiceForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,13 +16,11 @@ export function VoiceForm() {
   const { toast } = useToast();
   const { supabase } = useSupabase();
 
-  // Function to fetch saved voice samples from Supabase
   const fetchSavedVoiceSamples = async () => {
     try {
       setFetchStatus('loading');
       console.log('Attempting to fetch voice samples from voice_logs');
       
-      // Query voice logs from the database
       const { data, error } = await supabase
         .from('voice_logs')
         .select('*')
@@ -64,11 +61,9 @@ export function VoiceForm() {
     }
   };
 
-  // Add a function to use a saved voice sample for cloning
   const useSavedVoiceSample = (voiceLog: VoiceLogEntry) => {
     try {
       if (voiceLog.audio_data) {
-        // Convert the base64 audio data back to a blob
         const byteCharacters = atob(voiceLog.audio_data.split(',')[1]);
         const byteNumbers = new Array(byteCharacters.length);
         
@@ -79,7 +74,6 @@ export function VoiceForm() {
         const byteArray = new Uint8Array(byteNumbers);
         const blob = new Blob([byteArray], { type: 'audio/webm' });
         
-        // Set the selected sample and play it
         setSelectedSample(blob);
         playAudio(blob);
         
@@ -104,7 +98,6 @@ export function VoiceForm() {
     }
   };
 
-  // Function to play the audio blob
   const playAudio = (blob: Blob) => {
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
@@ -118,7 +111,6 @@ export function VoiceForm() {
     });
   };
 
-  // Handle sample selection from the VoiceRecorder component
   const handleSampleReady = (blob: Blob) => {
     setSelectedSample(blob);
     console.log("Voice sample ready:", blob);
@@ -129,7 +121,6 @@ export function VoiceForm() {
     });
   };
 
-  // Toggle showing/hiding saved samples
   const toggleSavedSamples = () => {
     if (!showSavedSamples) {
       fetchSavedVoiceSamples();
@@ -148,7 +139,7 @@ export function VoiceForm() {
 
       <div className="p-6 space-y-6">
         <Alert variant="default" className="bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
-          <InfoCircle className="h-4 w-4" />
+          <Info className="h-4 w-4" />
           <AlertTitle>Database Status</AlertTitle>
           <AlertDescription>
             Voice samples will be saved to your Supabase voice_logs table. Make sure Row Level Security (RLS) policies are properly configured.
