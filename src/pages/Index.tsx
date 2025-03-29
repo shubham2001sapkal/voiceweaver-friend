@@ -3,12 +3,13 @@ import { Header } from "@/components/Header";
 import { VoiceForm } from "@/components/VoiceForm";
 import { Footer } from "@/components/Footer";
 import { useSupabase } from "@/context/SupabaseContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { toast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const { checkConnection } = useSupabase();
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'failed'>('checking');
+  const hasToastBeenShown = useRef(false);
   
   useEffect(() => {
     const verifyConnection = async () => {
@@ -16,25 +17,33 @@ const Index = () => {
         const isConnected = await checkConnection();
         setConnectionStatus(isConnected ? 'connected' : 'failed');
         
-        if (isConnected) {
-          toast({
-            title: "Supabase Connected",
-            description: "Successfully connected to Supabase",
-          });
-        } else {
-          toast({
-            title: "Connection Failed",
-            description: "Failed to connect to Supabase",
-            variant: "destructive",
-          });
+        if (!hasToastBeenShown.current) {
+          hasToastBeenShown.current = true;
+          
+          if (isConnected) {
+            toast({
+              title: "Supabase Connected",
+              description: "Successfully connected to Supabase",
+            });
+          } else {
+            toast({
+              title: "Connection Failed",
+              description: "Failed to connect to Supabase",
+              variant: "destructive",
+            });
+          }
         }
       } catch (error) {
         setConnectionStatus('failed');
-        toast({
-          title: "Connection Error",
-          description: "An error occurred while checking Supabase connection",
-          variant: "destructive",
-        });
+        
+        if (!hasToastBeenShown.current) {
+          hasToastBeenShown.current = true;
+          toast({
+            title: "Connection Error",
+            description: "An error occurred while checking Supabase connection",
+            variant: "destructive",
+          });
+        }
       }
     };
     
