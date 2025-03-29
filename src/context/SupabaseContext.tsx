@@ -10,7 +10,7 @@ type SupabaseContextType = {
   user: User | null;
   session: Session | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
   checkConnection: () => Promise<boolean>;
@@ -32,7 +32,6 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session?.user);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -51,6 +50,11 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
       if (error) {
         throw error;
       }
+      
+      toast({
+        title: "Welcome back!",
+        description: "You've successfully signed in.",
+      });
     } catch (error: any) {
       toast({
         title: "Sign in failed",
@@ -63,39 +67,19 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
+  const signUp = async (email: string, password: string) => {
     try {
       setLoading(true);
-      console.log("Signing up with:", { email, password, fullName });
-      
-      // Include user metadata with fullName
-      const { data, error } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          data: {
-            full_name: fullName || ""
-          }
-        }
-      });
+      const { error } = await supabase.auth.signUp({ email, password });
       
       if (error) {
         throw error;
       }
       
-      console.log("Sign up successful:", data);
-      
-      // Verify user creation in profiles table (for debugging)
-      if (data.user) {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-        
-        console.log("Profile check:", { profileData, profileError });
-      }
-      
+      toast({
+        title: "Account created",
+        description: "Please check your email for a confirmation link.",
+      });
     } catch (error: any) {
       toast({
         title: "Sign up failed",
@@ -111,15 +95,17 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      await supabase.auth.signOut();
+      toast({
+        title: "Signed out",
+        description: "You've been successfully signed out.",
+      });
     } catch (error: any) {
       toast({
         title: "Sign out failed",
         description: error.message || "An error occurred during sign out.",
         variant: "destructive",
       });
-      throw error;
     } finally {
       setLoading(false);
     }
