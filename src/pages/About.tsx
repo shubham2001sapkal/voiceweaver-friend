@@ -61,7 +61,7 @@ export default function About() {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <Card>
               <CardHeader className="flex flex-row items-center gap-3">
                 <Award className="h-6 w-6 text-voiceback-500" />
@@ -109,24 +109,6 @@ export default function About() {
                 </p>
               </CardContent>
             </Card>
-          </div>
-
-          <div className="bg-gradient-to-r from-voiceback-50 to-voiceback-100 dark:from-voiceback-950 dark:to-voiceback-900 p-8 rounded-lg border border-voiceback-200 dark:border-voiceback-800">
-            <h2 className="text-2xl font-bold text-center mb-6">Ready to Start Your Creative Coding Journey?</h2>
-            <p className="text-center text-lg mb-6">
-              Join thousands of creators who are already building amazing applications with Knoxed CreatiCode.
-            </p>
-            <div className="flex justify-center">
-              <Button 
-                className="bg-voiceback-500 hover:bg-voiceback-600 text-white"
-                size="lg"
-                asChild
-              >
-                <Link to="/">
-                  Explore the Platform
-                </Link>
-              </Button>
-            </div>
           </div>
         </div>
       </div>
