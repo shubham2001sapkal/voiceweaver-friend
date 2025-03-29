@@ -3,7 +3,8 @@ import { createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
 import { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { createUser, signInUser, ensureUserProfile } from "@/lib/database";
 
 type SupabaseContextType = {
   supabase: typeof supabase;
@@ -31,10 +32,22 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      // When a user signs in or signs up, ensure their profile exists
+      if (event === 'SIGNED_IN' && session?.user) {
+        try {
+          const userData = session.user.user_metadata;
+          await ensureUserProfile(session.user.id, { 
+            full_name: userData.full_name || 'User' 
+          });
+        } catch (error) {
+          console.error("Error ensuring user profile:", error);
+        }
+      }
     });
 
     return () => {
@@ -45,20 +58,18 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      
-      if (error) {
-        throw error;
-      }
+      const { session } = await signInUser({ email, password });
       
       toast({
         title: "Welcome back!",
         description: "You've successfully signed in.",
       });
+      
+      return session;
     } catch (error: any) {
       toast({
         title: "Sign in failed",
-        description: error.message || "An error occurred during sign in.",
+        description: error.message || "Invalid email or password",
         variant: "destructive",
       });
       throw error;
@@ -70,22 +81,12 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, fullName?: string) => {
     try {
       setLoading(true);
-      // Include user metadata with fullName
-      const { data, error } = await supabase.auth.signUp({ 
+      
+      await createUser({ 
         email, 
         password,
-        options: {
-          data: {
-            full_name: fullName
-          }
-        }
+        full_name: fullName
       });
-      
-      if (error) {
-        throw error;
-      }
-      
-      console.log("Sign up successful:", data);
       
       toast({
         title: "Account created",
@@ -124,17 +125,13 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
 
   const checkConnection = async (): Promise<boolean> => {
     try {
-      // Use a simpler ping that's more likely to succeed
-      const { data, error } = await supabase.from('_dummy_query_for_ping').select('*').limit(1).maybeSingle();
+      const { data, error } = await supabase.from('profiles').select('count').limit(1);
       
-      // The query will likely fail with a 404 error (table not found), but that's expected and means
-      // the connection is working since we got a response from the server
-      if (error && error.code === 'PGRST116' || error?.code === '42P01') {
-        // Table doesn't exist, but connection is working
-        return true;
+      if (error && error.code !== 'PGRST116') {
+        console.error("Supabase connection check failed:", error);
+        return false;
       }
       
-      // Any other response means we're connected
       return true;
     } catch (error) {
       console.error("Supabase connection check failed:", error);

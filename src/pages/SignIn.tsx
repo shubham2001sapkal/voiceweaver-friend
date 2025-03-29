@@ -1,38 +1,43 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSupabase } from "@/context/SupabaseContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Header } from "@/components/Header";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { signInUser } from "@/lib/database";
 
 export default function SignIn() {
-  const { signIn } = useSupabase();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    
     if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
+      setError("Please fill in all fields");
       return;
     }
 
     try {
       setLoading(true);
-      await signIn(email, password);
+      await signInUser({ email, password });
+      
+      toast({
+        title: "Welcome back!",
+        description: "You've successfully signed in.",
+      });
       navigate("/");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Sign in error:", error);
+      setError(error.message || "Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -47,6 +52,14 @@ export default function SignIn() {
             <h1 className="text-2xl font-bold">Sign In</h1>
             <p className="text-muted-foreground">Welcome back! Sign in to your account</p>
           </div>
+          
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
