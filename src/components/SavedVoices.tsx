@@ -25,14 +25,7 @@ export function SavedVoices({ onVoiceSelect, text, selectedVoiceId }: SavedVoice
   return (
     <div className="space-y-3 mt-3">
       <div className="flex space-x-2">
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={toggleMute}
-          className="w-8 h-8"
-        >
-          {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-        </Button>
+        {/* Mute button removed */}
       </div>
       
       <audio ref={audioRef} style={{ display: 'none' }} />
