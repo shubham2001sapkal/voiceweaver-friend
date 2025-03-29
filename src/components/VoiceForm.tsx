@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +10,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useSupabase } from "@/context/SupabaseContext";
 import { SavedVoices } from "./SavedVoices";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -243,7 +241,6 @@ export function VoiceForm() {
   return (
     <div className="max-w-5xl mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Step cards */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg">
           <div className="p-6 flex flex-col items-center text-center h-full">
             <div className="w-16 h-16 bg-voiceback-100 dark:bg-voiceback-900/30 rounded-full flex items-center justify-center mb-4">
@@ -281,29 +278,8 @@ export function VoiceForm() {
         </div>
       </div>
 
-      {/* Main form area */}
       <div className="mt-12">
-        {isConnected && (
-          <Alert className="mb-8">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Subscription Notice</AlertTitle>
-            <AlertDescription>
-              Voice cloning requires a paid ElevenLabs subscription. If you don't have one,
-              you can still use the preset voices.{" "}
-              <a 
-                href="https://elevenlabs.io/subscription" 
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center text-primary underline hover:text-primary/90"
-              >
-                Upgrade your plan <ExternalLink className="ml-1 h-3 w-3" />
-              </a>
-            </AlertDescription>
-          </Alert>
-        )}
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left column - Voice Creation */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-semibold mb-6 flex items-center">
               <span className="w-8 h-8 rounded-full bg-voiceback text-white flex items-center justify-center mr-2 text-sm">1</span>
@@ -365,7 +341,6 @@ export function VoiceForm() {
             </div>
           </div>
           
-          {/* Right column - Speech Generation */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-semibold mb-6 flex items-center">
               <span className="w-8 h-8 rounded-full bg-voiceback text-white flex items-center justify-center mr-2 text-sm">2</span>

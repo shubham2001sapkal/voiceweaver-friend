@@ -65,19 +65,6 @@ const Index = () => {
             </p>
           </div>
           
-          <div className="flex items-center justify-center gap-2 mb-8">
-            <div className={`h-3 w-3 rounded-full ${
-              connectionStatus === 'checking' ? 'bg-yellow-500' :
-              connectionStatus === 'connected' ? 'bg-green-500' : 'bg-red-500'
-            }`}></div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Supabase: {
-                connectionStatus === 'checking' ? 'Checking connection...' :
-                connectionStatus === 'connected' ? 'Connected' : 'Connection failed'
-              }
-            </p>
-          </div>
-          
           <VoiceForm />
 
           <div className="text-center mt-12 mb-6">
