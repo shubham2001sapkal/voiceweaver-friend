@@ -14,9 +14,9 @@ export function Header() {
   const isAboutPage = location.pathname === "/about";
 
   return (
-    <header className="py-2 px-6 w-full border-b border-border/40 bg-secondary/30 backdrop-blur-sm">
-      <div className="container mx-auto flex justify-between items-center">
-        <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+    <header className="py-2 w-full border-b border-border/40 bg-secondary/30 backdrop-blur-sm">
+      <div className="container mx-auto flex justify-between items-center px-0">
+        <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity float-left pl-2">
           <CodeSquare className="h-6 w-6 text-voiceback-500" />
           <span className="font-bold text-lg bg-gradient-to-r from-voiceback-500 to-voiceback-400 bg-clip-text text-transparent tracking-tight">
             VoiceBack
