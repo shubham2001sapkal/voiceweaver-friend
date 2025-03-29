@@ -10,7 +10,7 @@ type SupabaseContextType = {
   user: User | null;
   session: Session | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
   checkConnection: () => Promise<boolean>;
@@ -50,11 +50,6 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
       if (error) {
         throw error;
       }
-      
-      toast({
-        title: "Welcome back!",
-        description: "You've successfully signed in.",
-      });
     } catch (error: any) {
       toast({
         title: "Sign in failed",
@@ -67,19 +62,26 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, fullName?: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({ email, password });
+      // Include user metadata with fullName
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            full_name: fullName
+          }
+        }
+      });
       
       if (error) {
         throw error;
       }
       
-      toast({
-        title: "Account created",
-        description: "Please check your email for a confirmation link.",
-      });
+      console.log("Sign up successful:", data);
+      
     } catch (error: any) {
       toast({
         title: "Sign up failed",
@@ -95,17 +97,15 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       setLoading(true);
-      await supabase.auth.signOut();
-      toast({
-        title: "Signed out",
-        description: "You've been successfully signed out.",
-      });
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
     } catch (error: any) {
       toast({
         title: "Sign out failed",
         description: error.message || "An error occurred during sign out.",
         variant: "destructive",
       });
+      throw error;
     } finally {
       setLoading(false);
     }
