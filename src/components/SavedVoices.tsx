@@ -1,6 +1,5 @@
 
 import { useState, useRef } from "react";
-import { elevenlabsService } from "@/services/elevenlabs";
 import { Button } from "@/components/ui/button";
 import { Volume2, VolumeX } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -12,7 +11,6 @@ interface SavedVoicesProps {
 }
 
 export function SavedVoices({ onVoiceSelect, text, selectedVoiceId }: SavedVoicesProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();

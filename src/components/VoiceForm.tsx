@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useSupabase } from "@/context/SupabaseContext";
 import { SavedVoices } from "./SavedVoices";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function VoiceForm() {
   const [voiceSample, setVoiceSample] = useState<Blob | null>(null);
@@ -32,6 +34,7 @@ export function VoiceForm() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
   const { user } = useSupabase();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -238,34 +241,50 @@ export function VoiceForm() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-voiceback dark:text-primary flex items-center justify-center gap-2">
-            <Mic className="h-6 w-6" /> VoiceBack
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Restore your voice with the power of AI
-          </p>
-          
-          {isConnected ? (
-            <div className="flex items-center justify-center mt-2 text-sm text-green-600 dark:text-green-400">
-              <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-              Connected to ElevenLabs
+    <div className="max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Step cards */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg">
+          <div className="p-6 flex flex-col items-center text-center h-full">
+            <div className="w-16 h-16 bg-voiceback-100 dark:bg-voiceback-900/30 rounded-full flex items-center justify-center mb-4">
+              <Mic className="h-8 w-8 text-voiceback dark:text-voiceback-400" />
             </div>
-          ) : (
-            <button 
-              onClick={() => setIsSettingsOpen(true)}
-              className="flex items-center justify-center mt-2 text-sm text-red-600 dark:text-red-400 hover:underline"
-            >
-              <div className="h-2 w-2 rounded-full bg-red-500 mr-2"></div>
-              Not connected to ElevenLabs - Click to connect
-            </button>
-          )}
+            <h3 className="text-xl font-semibold mb-2">Record Your Voice</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Upload an audio sample or record your voice directly through your microphone.
+            </p>
+          </div>
         </div>
 
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg">
+          <div className="p-6 flex flex-col items-center text-center h-full">
+            <div className="w-16 h-16 bg-voiceback-100 dark:bg-voiceback-900/30 rounded-full flex items-center justify-center mb-4">
+              <Wand2 className="h-8 w-8 text-voiceback dark:text-voiceback-400" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Create Your Voice</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Our AI technology creates a digital clone of your voice that sounds just like you.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg">
+          <div className="p-6 flex flex-col items-center text-center h-full">
+            <div className="w-16 h-16 bg-voiceback-100 dark:bg-voiceback-900/30 rounded-full flex items-center justify-center mb-4">
+              <Volume2 className="h-8 w-8 text-voiceback dark:text-voiceback-400" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Generate Speech</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Type any text and hear it spoken in your voice or select from our preset voices.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Main form area */}
+      <div className="mt-12">
         {isConnected && (
-          <Alert className="mb-4">
+          <Alert className="mb-8">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Subscription Notice</AlertTitle>
             <AlertDescription>
@@ -283,33 +302,37 @@ export function VoiceForm() {
           </Alert>
         )}
 
-        <div className="space-y-4">
-          <div className="p-4 border rounded-lg bg-background">
-            <h2 className="text-lg font-medium mb-4">Step 1: Create Your Voice</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left column - Voice Creation */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-semibold mb-6 flex items-center">
+              <span className="w-8 h-8 rounded-full bg-voiceback text-white flex items-center justify-center mr-2 text-sm">1</span>
+              Create Your Voice
+            </h2>
             
             <div className="space-y-4">
               <div>
-                <Label htmlFor="voice-name">Name your voice</Label>
+                <Label htmlFor="voice-name" className="text-base">Name your voice</Label>
                 <Input 
                   id="voice-name" 
                   placeholder="Enter a name for your voice"
                   value={voiceName}
                   onChange={(e) => setVoiceName(e.target.value)}
-                  className="mt-1"
+                  className="mt-2"
                 />
               </div>
               
               <div>
-                <Label htmlFor="voice-sample">Voice Sample</Label>
-                <div className="mt-2">
+                <Label htmlFor="voice-sample" className="text-base">Voice Sample</Label>
+                <div className="mt-2 bg-gray-50 dark:bg-gray-700/30 p-4 rounded-md">
                   <VoiceRecorder onSampleReady={handleSampleReady} />
                 </div>
               </div>
               
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4 pt-2">
                 <Button
                   onClick={handleGenerateVoice}
-                  className="bg-voiceback hover:bg-voiceback/90"
+                  className="bg-voiceback hover:bg-voiceback-700 text-white flex-1"
                   disabled={isGeneratingVoice || isGeneratingSpeech || !isConnected || !voiceSample || !voiceName.trim()}
                   title={!isConnected ? "Connect to ElevenLabs first" : ""}
                 >
@@ -330,19 +353,32 @@ export function VoiceForm() {
                   <RefreshCw className="h-4 w-4" /> Refresh Voices
                 </Button>
               </div>
+              
+              {!isConnected && (
+                <button 
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="w-full mt-2 text-sm text-voiceback dark:text-primary underline flex items-center justify-center gap-1"
+                >
+                  <AlertCircle className="h-3 w-3" /> Connect to ElevenLabs first
+                </button>
+              )}
             </div>
           </div>
           
-          <div className="p-4 border rounded-lg bg-background">
-            <h2 className="text-lg font-medium mb-4">Step 2: Generate Speech</h2>
+          {/* Right column - Speech Generation */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <h2 className="text-2xl font-semibold mb-6 flex items-center">
+              <span className="w-8 h-8 rounded-full bg-voiceback text-white flex items-center justify-center mr-2 text-sm">2</span>
+              Generate Speech
+            </h2>
             
             <div className="space-y-4">
               <div>
-                <Label htmlFor="text-input">What would you like to say?</Label>
+                <Label htmlFor="text-input" className="text-base">What would you like to say?</Label>
                 <Textarea
                   id="text-input"
                   placeholder="Type what you want to say..."
-                  className="mt-2 min-h-[100px]"
+                  className="mt-2 min-h-[120px] bg-gray-50 dark:bg-gray-700/30"
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                 />
@@ -350,10 +386,10 @@ export function VoiceForm() {
               
               {isConnected && availableVoices.length > 0 && (
                 <div>
-                  <Label htmlFor="voice-select">Select a voice</Label>
+                  <Label htmlFor="voice-select" className="text-base">Select a voice</Label>
                   <div className="mt-2">
                     <Select value={selectedVoiceId} onValueChange={setSelectedVoiceId}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-gray-50 dark:bg-gray-700/30">
                         <SelectValue placeholder="Select a voice" />
                       </SelectTrigger>
                       <SelectContent>
@@ -371,15 +407,14 @@ export function VoiceForm() {
               {isConnected && selectedVoiceId && (
                 <Button
                   onClick={handleUsePresetVoice}
-                  variant="outline"
+                  className="w-full bg-voiceback hover:bg-voiceback/90 text-white"
                   disabled={isGeneratingSpeech || isGeneratingVoice || !text.trim() || !selectedVoiceId}
-                  className="w-full"
                 >
                   {isGeneratingSpeech ? (
                     "Generating..."
                   ) : (
                     <>
-                      <Volume2 className="h-4 w-4 mr-2" /> Generate Speech with Selected Voice
+                      <Volume2 className="h-4 w-4 mr-2" /> Generate Speech
                     </>
                   )}
                 </Button>
@@ -394,31 +429,33 @@ export function VoiceForm() {
               )}
               
               {generatedAudio && (
-                <div className="mt-4 p-3 bg-secondary rounded-md flex items-center justify-between">
-                  <span className="text-sm font-medium">Generated audio ready</span>
-                  <div className="flex gap-2 items-center">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={toggleMute}
-                      className="w-8 h-8"
-                    >
-                      {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={playAudio}
-                      className="flex items-center gap-1"
-                    >
-                      <Play className="h-4 w-4" /> Play
-                    </Button>
+                <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-md">
+                  <h3 className="font-medium mb-3">Generated Audio</h3>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={toggleMute}
+                        className="w-8 h-8"
+                      >
+                        {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={playAudio}
+                        className="flex items-center gap-1"
+                      >
+                        <Play className="h-4 w-4" /> Play
+                      </Button>
+                    </div>
                     <a
                       href={generatedAudio}
                       download="voiceback-generated.mp3"
-                      className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                      className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-md bg-voiceback text-white hover:bg-voiceback-700 transition-colors"
                     >
-                      Download
+                      Download Audio
                     </a>
                   </div>
                   <audio ref={audioRef} src={generatedAudio} />
@@ -426,10 +463,6 @@ export function VoiceForm() {
               )}
             </div>
           </div>
-        </div>
-
-        <div className="text-center mt-8 text-sm text-muted-foreground italic">
-          "For people who lost their voice, VoiceBack restores their ability to speak using AI"
         </div>
       </div>
 

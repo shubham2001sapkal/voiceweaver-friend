@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, Square, Upload } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function VoiceRecorder({ onSampleReady }: { onSampleReady: (blob: Blob) => void }) {
   const [isRecording, setIsRecording] = useState(false);
@@ -11,6 +12,7 @@ export function VoiceRecorder({ onSampleReady }: { onSampleReady: (blob: Blob) =
   const [recordingTime, setRecordingTime] = useState(0);
   const [recordingInterval, setRecordingInterval] = useState<number | null>(null);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const startRecording = async () => {
     try {
@@ -103,25 +105,27 @@ export function VoiceRecorder({ onSampleReady }: { onSampleReady: (blob: Blob) =
 
   return (
     <div className="flex flex-col gap-4 w-full">
-      <div className="flex flex-wrap gap-4 justify-center">
+      <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-3 justify-center`}>
         {isRecording ? (
           <Button 
             onClick={stopRecording} 
             variant="destructive"
-            className="flex gap-2 items-center"
+            className="flex gap-2 items-center w-full"
+            size={isMobile ? "sm" : "default"}
           >
             <Square className="h-4 w-4" /> Stop Recording ({formatTime(recordingTime)})
           </Button>
         ) : (
           <Button 
             onClick={startRecording} 
-            className="bg-voiceback hover:bg-voiceback-700 flex gap-2 items-center"
+            className="bg-voiceback hover:bg-voiceback-700 flex gap-2 items-center w-full"
+            size={isMobile ? "sm" : "default"}
           >
             <Mic className="h-4 w-4" /> Record Voice Sample
           </Button>
         )}
         
-        <div className="relative">
+        <div className="relative w-full">
           <input
             type="file"
             id="voice-file"
@@ -131,7 +135,8 @@ export function VoiceRecorder({ onSampleReady }: { onSampleReady: (blob: Blob) =
           />
           <Button 
             variant="outline" 
-            className="flex gap-2 items-center"
+            className="flex gap-2 items-center w-full"
+            size={isMobile ? "sm" : "default"}
           >
             <Upload className="h-4 w-4" /> Upload Audio File
           </Button>
