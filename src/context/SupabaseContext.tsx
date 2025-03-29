@@ -1,3 +1,4 @@
+
 import { createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
@@ -30,9 +31,6 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-      
-      // When a user signs in or signs up, we don't need to manually create profiles anymore
-      // The database trigger will handle this automatically
     });
 
     // THEN check for existing session
@@ -72,16 +70,26 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       
-      await createUser({ 
+      const result = await createUser({ 
         email, 
         password,
         full_name: fullName
       });
       
-      toast({
-        title: "Account created",
-        description: "Please check your email for a confirmation link.",
-      });
+      if (result.user) {
+        // Sign in the user immediately after signup
+        await signInUser({ email, password });
+        
+        toast({
+          title: "Account created",
+          description: "You've been successfully signed in.",
+        });
+      } else {
+        toast({
+          title: "Account created",
+          description: "Please check your email for a confirmation link.",
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Sign up failed",

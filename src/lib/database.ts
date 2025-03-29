@@ -30,7 +30,8 @@ export const createUser = async (credentials: UserCredentials) => {
     options: {
       data: {
         full_name: credentials.full_name
-      }
+      },
+      emailRedirectTo: window.location.origin,
     }
   });
   
