@@ -1,14 +1,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { elevenlabsService, SavedVoice } from "@/services/elevenlabs";
-import { getVoiceLogs, VoiceLog } from "@/services/voiceLogService";
 import { Button } from "@/components/ui/button";
 import { Play, Volume2, VolumeX } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useSupabase } from "@/context/SupabaseContext";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface SavedVoicesProps {
   onVoiceSelect: (voiceId: string) => void;
@@ -17,72 +14,25 @@ interface SavedVoicesProps {
 
 export function SavedVoices({ onVoiceSelect, text }: SavedVoicesProps) {
   const [savedVoices, setSavedVoices] = useState<SavedVoice[]>([]);
-  const [voiceLogs, setVoiceLogs] = useState<VoiceLog[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedVoiceId, setSelectedVoiceId] = useState<string>("");
   const [isMuted, setIsMuted] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
-  const { user } = useSupabase();
 
   useEffect(() => {
-    // Load saved voices both from local storage and from Supabase
-    const loadVoices = async () => {
-      setIsLoading(true);
-      
-      // Get locally saved voices from ElevenLabs service
-      const localVoices = elevenlabsService.getSavedVoices();
-      
-      // Get voices from Supabase if user is logged in
-      if (user) {
-        try {
-          const logs = await getVoiceLogs(user.id);
-          setVoiceLogs(logs);
-          
-          // Convert logs to SavedVoice format and merge with local voices
-          // (avoiding duplicates based on voice_id)
-          const voiceMap = new Map<string, SavedVoice>();
-          
-          // Add local voices to map
-          localVoices.forEach(voice => {
-            voiceMap.set(voice.voice_id, voice);
-          });
-          
-          // Add Supabase voices to map
-          logs.forEach(log => {
-            if (!voiceMap.has(log.voice_id)) {
-              voiceMap.set(log.voice_id, {
-                id: log.id || crypto.randomUUID(),
-                name: log.name,
-                voice_id: log.voice_id
-              });
-            }
-          });
-          
-          // Convert map back to array
-          setSavedVoices(Array.from(voiceMap.values()));
-        } catch (error) {
-          console.error("Error loading voice logs:", error);
-          setSavedVoices(localVoices);
-        }
-      } else {
-        setSavedVoices(localVoices);
-      }
-      
-      setIsLoading(false);
-    };
-    
-    loadVoices();
-  }, [user]);
+    // Load saved voices
+    const voices = elevenlabsService.getSavedVoices();
+    setSavedVoices(voices);
+  }, []);
 
   const handleVoiceSelect = (voiceId: string) => {
     setSelectedVoiceId(voiceId);
     onVoiceSelect(voiceId);
   };
 
-  const playWithVoice = async (voiceId: string) => {
-    if (!voiceId || !text.trim()) {
+  const playWithVoice = async () => {
+    if (!selectedVoiceId || !text.trim()) {
       toast({
         title: "Cannot Play",
         description: "Please select a voice and enter text to speak",
@@ -93,7 +43,7 @@ export function SavedVoices({ onVoiceSelect, text }: SavedVoicesProps) {
 
     try {
       setIsPlaying(true);
-      const audioBlob = await elevenlabsService.textToSpeech(text, voiceId);
+      const audioBlob = await elevenlabsService.textToSpeech(text, selectedVoiceId);
       const audioUrl = URL.createObjectURL(audioBlob);
       
       if (audioRef.current) {
@@ -124,11 +74,7 @@ export function SavedVoices({ onVoiceSelect, text }: SavedVoicesProps) {
     }
   };
 
-  if (isLoading) {
-    return <div className="text-sm text-muted-foreground mt-2">Loading your voices...</div>;
-  }
-
-  if (savedVoices.length === 0 && voiceLogs.length === 0) {
+  if (savedVoices.length === 0) {
     return <div className="text-sm text-muted-foreground mt-2">No saved voices yet. Record or upload a voice sample first.</div>;
   }
 
@@ -150,43 +96,12 @@ export function SavedVoices({ onVoiceSelect, text }: SavedVoicesProps) {
         </Select>
       </div>
 
-      {savedVoices.length > 0 && (
-        <div className="border rounded-md">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {savedVoices.map((voice) => (
-                <TableRow key={voice.id}>
-                  <TableCell>{voice.name}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={!text.trim() || isPlaying}
-                      onClick={() => playWithVoice(voice.voice_id)}
-                      className="flex items-center gap-1"
-                    >
-                      <Play className="h-4 w-4" /> Play
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-
       <div className="flex space-x-2">
         <Button
           variant="outline"
           size="sm"
           disabled={!selectedVoiceId || !text.trim() || isPlaying}
-          onClick={() => playWithVoice(selectedVoiceId)}
+          onClick={playWithVoice}
           className="flex items-center gap-1"
         >
           <Play className="h-4 w-4" /> Play with selected voice
