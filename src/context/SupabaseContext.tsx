@@ -32,7 +32,6 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session?.user);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -66,15 +65,13 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, fullName?: string) => {
     try {
       setLoading(true);
-      console.log("Signing up with:", { email, password, fullName });
-      
       // Include user metadata with fullName
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
           data: {
-            full_name: fullName || ""
+            full_name: fullName
           }
         }
       });
@@ -84,17 +81,6 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
       }
       
       console.log("Sign up successful:", data);
-      
-      // Verify user creation in profiles table (for debugging)
-      if (data.user) {
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-        
-        console.log("Profile check:", { profileData, profileError });
-      }
       
     } catch (error: any) {
       toast({
