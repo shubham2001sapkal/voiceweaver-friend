@@ -19,6 +19,7 @@ const formSchema = z.object({
 export default function SignIn() {
   const { signIn } = useSupabase();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -31,11 +32,13 @@ export default function SignIn() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      setError(null);
       setIsLoading(true);
       await signIn(values.email, values.password);
       navigate("/");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Sign in error:", error);
+      setError("Invalid email or password. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -53,6 +56,11 @@ export default function SignIn() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                {error}
+              </div>
+            )}
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField

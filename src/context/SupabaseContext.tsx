@@ -10,7 +10,7 @@ type SupabaseContextType = {
   user: User | null;
   session: Session | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
   checkConnection: () => Promise<boolean>;
@@ -45,9 +45,14 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
+        toast({
+          title: "Sign in failed",
+          description: "Email or password is incorrect.",
+          variant: "destructive",
+        });
         throw error;
       }
       
@@ -67,13 +72,23 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, fullName: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({ email, password });
       
-      if (error) {
-        throw error;
+      // First, create the auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          }
+        }
+      });
+      
+      if (authError) {
+        throw authError;
       }
       
       toast({
