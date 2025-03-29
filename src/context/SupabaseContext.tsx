@@ -1,6 +1,6 @@
 
 import { createContext, useContext, ReactNode } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -26,12 +26,7 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -41,13 +36,23 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
       if (event === 'SIGNED_IN' && session?.user) {
         try {
           const userData = session.user.user_metadata;
-          await ensureUserProfile(session.user.id, { 
-            full_name: userData.full_name || 'User' 
-          });
+          setTimeout(async () => {
+            await ensureUserProfile(session.user.id, { 
+              full_name: userData.full_name || 'User',
+              email: session.user.email
+            });
+          }, 0); // Use setTimeout to prevent deadlocks
         } catch (error) {
           console.error("Error ensuring user profile:", error);
         }
       }
+    });
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
     });
 
     return () => {

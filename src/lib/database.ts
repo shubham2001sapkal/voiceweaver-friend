@@ -1,5 +1,5 @@
 
-import { supabase } from './supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 // Database schema definition
 export type User = {
@@ -90,42 +90,3 @@ export const ensureUserProfile = async (
     throw error;
   }
 };
-
-// Here's the SQL to create the profiles table in Supabase:
-/*
-CREATE TABLE public.profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  full_name TEXT NOT NULL,
-  email TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Enable Row Level Security
-ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-
--- Create policy to allow users to view and edit only their own profile
-CREATE POLICY "Users can view their own profile" 
-  ON public.profiles 
-  FOR SELECT 
-  USING (auth.uid() = id);
-
-CREATE POLICY "Users can update their own profile" 
-  ON public.profiles 
-  FOR UPDATE 
-  USING (auth.uid() = id);
-
--- Create a trigger to update the updated_at column
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER update_profiles_updated_at
-BEFORE UPDATE ON public.profiles
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column();
-*/
