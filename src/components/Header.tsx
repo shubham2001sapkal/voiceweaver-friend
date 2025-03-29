@@ -20,7 +20,7 @@ export function Header() {
           <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <CodeSquare className="h-6 w-6 text-voiceback-500" />
             <span className="font-bold text-lg bg-gradient-to-r from-voiceback-500 to-voiceback-400 bg-clip-text text-transparent tracking-tight">
-              Knoxed CreatiCode
+              VoiceBack
             </span>
           </Link>
         </div>
