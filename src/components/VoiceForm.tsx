@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -5,10 +6,9 @@ import { VoiceRecorder } from "./VoiceRecorder";
 import { elevenlabsService } from "@/services/elevenlabs";
 import { Mic, Play, AlertCircle, Wand2, VolumeX, Volume2, ExternalLink } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export function VoiceForm() {
@@ -18,8 +18,6 @@ export function VoiceForm() {
   const [generatedAudio, setGeneratedAudio] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState(elevenlabsService.getApiKey() || "");
-  const [availableVoices, setAvailableVoices] = useState<any[]>([]);
-  const [selectedVoiceId, setSelectedVoiceId] = useState<string>(elevenlabsService.getApiKey() ? "EXAVITQu4vr4xnSDxMaL" : "");
   const [isConnected, setIsConnected] = useState<boolean>(!!elevenlabsService.getApiKey());
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -30,13 +28,12 @@ export function VoiceForm() {
       const apiKey = elevenlabsService.getApiKey();
       if (apiKey) {
         try {
-          const voices = await elevenlabsService.getAvailableVoices();
-          setAvailableVoices(voices);
+          await elevenlabsService.getAvailableVoices();
           setIsConnected(true);
           
           toast({
             title: "Connected to ElevenLabs",
-            description: `Successfully connected with ${voices.length} available voices`,
+            description: "Successfully connected to ElevenLabs API",
           });
         } catch (error) {
           console.error("Failed to connect to ElevenLabs", error);
@@ -56,6 +53,12 @@ export function VoiceForm() {
 
   const handleSampleReady = (blob: Blob) => {
     setVoiceSample(blob);
+    
+    // Show confirmation toast that voice sample is ready
+    toast({
+      title: "Voice Sample Ready",
+      description: "Your voice sample is ready for cloning.",
+    });
   };
 
   const handleGenerateVoice = async () => {
@@ -89,6 +92,11 @@ export function VoiceForm() {
       try {
         const voiceId = await elevenlabsService.cloneVoice(voiceSample, "My Voice");
         
+        toast({
+          title: "Voice Cloned Successfully",
+          description: "Your voice has been cloned. Now generating speech...",
+        });
+        
         const audioBlob = await elevenlabsService.textToSpeech(text, voiceId);
         
         const audioUrl = URL.createObjectURL(audioBlob);
@@ -102,56 +110,13 @@ export function VoiceForm() {
         if (error.message && error.message.includes("subscription does not include voice cloning")) {
           toast({
             title: "Subscription Required",
-            description: "Voice cloning requires a paid ElevenLabs subscription. Try using a preset voice instead.",
+            description: "Voice cloning requires a paid ElevenLabs subscription. Please upgrade your plan.",
             variant: "destructive",
           });
         } else {
           throw error;
         }
       }
-    } catch (error: any) {
-      console.error("Error generating voice:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to generate voice. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleUsePresetVoice = async () => {
-    if (!text.trim()) {
-      toast({
-        title: "Missing Text",
-        description: "Please enter the text you want to convert to speech.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!selectedVoiceId) {
-      toast({
-        title: "No Voice Selected",
-        description: "Please select a voice to use.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-
-      const audioBlob = await elevenlabsService.textToSpeech(text, selectedVoiceId);
-      
-      const audioUrl = URL.createObjectURL(audioBlob);
-      setGeneratedAudio(audioUrl);
-
-      toast({
-        title: "Voice Generated",
-        description: "Your text has been converted to speech!",
-      });
     } catch (error: any) {
       console.error("Error generating voice:", error);
       toast({
@@ -188,13 +153,12 @@ export function VoiceForm() {
       setIsSettingsOpen(false);
       
       try {
-        const voices = await elevenlabsService.getAvailableVoices();
-        setAvailableVoices(voices);
+        await elevenlabsService.getAvailableVoices();
         setIsConnected(true);
         
         toast({
           title: "API Key Saved",
-          description: `Successfully connected with ${voices.length} available voices`,
+          description: "Successfully connected to ElevenLabs API",
         });
       } catch (error) {
         console.error("Failed to connect with the provided API key", error);
@@ -247,8 +211,7 @@ export function VoiceForm() {
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Subscription Notice</AlertTitle>
             <AlertDescription>
-              Voice cloning requires a paid ElevenLabs subscription. If you don't have one,
-              you can still use the preset voices.{" "}
+              Voice cloning requires a paid ElevenLabs subscription.{" "}
               <a 
                 href="https://elevenlabs.io/subscription" 
                 target="_blank"
@@ -285,26 +248,6 @@ export function VoiceForm() {
             />
           </div>
 
-          {isConnected && availableVoices.length > 0 && (
-            <div>
-              <Label htmlFor="voice-select">Or use a preset voice</Label>
-              <div className="mt-2">
-                <Select value={selectedVoiceId} onValueChange={setSelectedVoiceId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a voice" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableVoices.map(voice => (
-                      <SelectItem key={voice.voice_id} value={voice.voice_id}>
-                        {voice.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-
           <div className="flex flex-wrap gap-4">
             <Button
               onClick={handleGenerateVoice}
@@ -320,22 +263,6 @@ export function VoiceForm() {
                 </>
               )}
             </Button>
-
-            {isConnected && selectedVoiceId && (
-              <Button
-                onClick={handleUsePresetVoice}
-                variant="outline"
-                disabled={isLoading || !isConnected}
-              >
-                {isLoading ? (
-                  "Generating..."
-                ) : (
-                  <>
-                    <Volume2 className="h-4 w-4 mr-2" /> Use Preset Voice
-                  </>
-                )}
-              </Button>
-            )}
           </div>
 
           {generatedAudio && (

@@ -56,7 +56,12 @@ export class ElevenLabsService {
       const formData = new FormData();
       formData.append('name', name);
       formData.append('description', 'Voice cloned via VoiceBack app');
-      formData.append('files', audioBlob, 'voice_sample.wav');
+      
+      // Ensure proper file name and type for better compatibility
+      const audioFile = new File([audioBlob], 'voice_sample.wav', { 
+        type: audioBlob.type || 'audio/wav'
+      });
+      formData.append('files', audioFile);
 
       const response = await fetch(`${this.apiUrl}/voices/add`, {
         method: 'POST',
