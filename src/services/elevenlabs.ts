@@ -7,11 +7,18 @@ export interface ElevenLabsOptions {
   model?: string;
 }
 
+export interface SavedVoice {
+  id: string;
+  name: string;
+  voice_id: string;
+}
+
 export class ElevenLabsService {
   private apiKey: string | null = null;
   private voiceId: string = "EXAVITQu4vr4xnSDxMaL"; // Default to Sarah voice
   private model: string = "eleven_multilingual_v2"; // Default model
   private apiUrl: string = "https://api.elevenlabs.io/v1";
+  private savedVoices: SavedVoice[] = [];
   
   constructor(options?: ElevenLabsOptions) {
     if (options?.apiKey) {
@@ -23,6 +30,40 @@ export class ElevenLabsService {
     if (options?.model) {
       this.model = options.model;
     }
+    
+    // Try to load saved voices from localStorage
+    this.loadSavedVoices();
+  }
+
+  private loadSavedVoices() {
+    const savedVoicesString = localStorage.getItem('elevenlabs_saved_voices');
+    if (savedVoicesString) {
+      try {
+        this.savedVoices = JSON.parse(savedVoicesString);
+      } catch (e) {
+        console.error("Failed to parse saved voices:", e);
+        this.savedVoices = [];
+      }
+    }
+  }
+
+  private saveSavedVoices() {
+    localStorage.setItem('elevenlabs_saved_voices', JSON.stringify(this.savedVoices));
+  }
+
+  public addSavedVoice(voice: SavedVoice) {
+    // Check if voice already exists
+    const existingIndex = this.savedVoices.findIndex(v => v.voice_id === voice.voice_id);
+    if (existingIndex >= 0) {
+      this.savedVoices[existingIndex] = voice;
+    } else {
+      this.savedVoices.push(voice);
+    }
+    this.saveSavedVoices();
+  }
+
+  public getSavedVoices(): SavedVoice[] {
+    return [...this.savedVoices];
   }
 
   public setApiKey(apiKey: string) {
@@ -47,7 +88,7 @@ export class ElevenLabsService {
     this.voiceId = voiceId;
   }
 
-  public async cloneVoice(audioBlob: Blob, name: string): Promise<string> {
+  public async cloneVoice(audioBlob: Blob, name: string): Promise<SavedVoice> {
     if (!this.apiKey) {
       throw new Error("API key is required for voice cloning");
     }
@@ -78,7 +119,16 @@ export class ElevenLabsService {
       }
 
       const data = await response.json();
-      return data.voice_id;
+      const newVoice: SavedVoice = {
+        id: crypto.randomUUID(),
+        name: name,
+        voice_id: data.voice_id
+      };
+      
+      // Add to saved voices
+      this.addSavedVoice(newVoice);
+      
+      return newVoice;
     } catch (error) {
       console.error('Voice cloning error:', error);
       throw error;

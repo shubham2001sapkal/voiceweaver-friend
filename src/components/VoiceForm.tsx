@@ -1,8 +1,10 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { VoiceRecorder } from "./VoiceRecorder";
-import { elevenlabsService } from "@/services/elevenlabs";
+import { elevenlabsService, SavedVoice } from "@/services/elevenlabs";
+import { saveVoiceRecording } from "@/services/voiceService";
 import { Mic, Play, AlertCircle, Wand2, VolumeX, Volume2, ExternalLink } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -10,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useSupabase } from "@/context/SupabaseContext";
+import { SavedVoices } from "./SavedVoices";
 
 export function VoiceForm() {
   const [voiceSample, setVoiceSample] = useState<Blob | null>(null);
@@ -22,8 +26,10 @@ export function VoiceForm() {
   const [selectedVoiceId, setSelectedVoiceId] = useState<string>(elevenlabsService.getApiKey() ? "EXAVITQu4vr4xnSDxMaL" : "");
   const [isConnected, setIsConnected] = useState<boolean>(!!elevenlabsService.getApiKey());
   const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [voiceName, setVoiceName] = useState<string>("");
   const audioRef = useRef<HTMLAudioElement>(null);
   const { toast } = useToast();
+  const { user } = useSupabase();
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -77,6 +83,15 @@ export function VoiceForm() {
       return;
     }
 
+    if (!voiceName.trim()) {
+      toast({
+        title: "Missing Voice Name",
+        description: "Please enter a name for your voice.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
 
@@ -87,9 +102,20 @@ export function VoiceForm() {
       }
 
       try {
-        const voiceId = await elevenlabsService.cloneVoice(voiceSample, "My Voice");
+        // Clone the voice
+        const savedVoice = await elevenlabsService.cloneVoice(voiceSample, voiceName);
         
-        const audioBlob = await elevenlabsService.textToSpeech(text, voiceId);
+        // Save to Supabase if user is logged in
+        if (user) {
+          await saveVoiceRecording({
+            name: voiceName,
+            voice_id: savedVoice.voice_id,
+            user_id: user.id
+          });
+        }
+        
+        // Generate speech with the cloned voice
+        const audioBlob = await elevenlabsService.textToSpeech(text, savedVoice.voice_id);
         
         const audioUrl = URL.createObjectURL(audioBlob);
         setGeneratedAudio(audioUrl);
@@ -268,9 +294,16 @@ export function VoiceForm() {
               <VoiceRecorder onSampleReady={handleSampleReady} />
             </div>
             {voiceSample && (
-              <p className="text-sm text-green-600 dark:text-green-400 mt-2">
-                ✓ Voice sample ready
-              </p>
+              <div className="mt-2">
+                <Label htmlFor="voice-name">Name your voice</Label>
+                <Input 
+                  id="voice-name" 
+                  placeholder="Enter a name for your voice"
+                  value={voiceName}
+                  onChange={(e) => setVoiceName(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
             )}
           </div>
 
@@ -284,6 +317,11 @@ export function VoiceForm() {
               onChange={(e) => setText(e.target.value)}
             />
           </div>
+
+          {/* Use your saved voices section */}
+          {isConnected && (
+            <SavedVoices onVoiceSelect={setSelectedVoiceId} text={text} />
+          )}
 
           {isConnected && availableVoices.length > 0 && (
             <div>
@@ -309,7 +347,7 @@ export function VoiceForm() {
             <Button
               onClick={handleGenerateVoice}
               className="bg-voiceback hover:bg-voiceback/90"
-              disabled={isLoading || !isConnected}
+              disabled={isLoading || !isConnected || !voiceSample || !voiceName.trim()}
               title={!isConnected ? "Connect to ElevenLabs first" : ""}
             >
               {isLoading ? (
