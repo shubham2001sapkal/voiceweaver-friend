@@ -1,8 +1,7 @@
-
 #root {
-  max-width: 100%;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 0;
+  padding: 2rem;
   text-align: center;
 }
 
@@ -35,28 +34,9 @@
 }
 
 .card {
-  padding: 1em;
+  padding: 2em;
 }
 
 .read-the-docs {
   color: #888;
-}
-
-/* Responsive utilities */
-@media (max-width: 640px) {
-  .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-}
-
-/* Custom card style for VoiceBack */
-.voiceback-card {
-  @apply bg-white dark:bg-gray-900 rounded-lg shadow-lg p-4 sm:p-6 border border-border mx-auto my-4 sm:my-8;
-  max-width: 100%;
-}
-
-/* Custom button style for VoiceBack */
-.voiceback-button {
-  @apply bg-voiceback hover:bg-voiceback-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 w-full;
 }
