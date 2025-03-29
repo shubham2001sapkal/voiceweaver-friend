@@ -76,6 +76,8 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       
+      console.log("Signing up with full name:", fullName); // Debug log
+      
       // First, create the auth user with user metadata including full name
       const { data: authData, error: authError } = await supabase.auth.signUp({ 
         email, 
@@ -108,20 +110,20 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
       }
       
       // Now create a profile entry in the profiles table
+      // Use upsert to ensure we don't create duplicate entries
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert({
+        .upsert({
           id: authData.user.id,
-          full_name: fullName,
+          full_name: fullName, // Make sure this field matches the column name in Supabase
           email: email,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        });
+        }, { onConflict: 'id' });
       
       if (profileError) {
         console.error("Error creating user profile:", profileError);
-        // We don't throw here because the auth user was created successfully
-        // But we log it to the console for debugging
+        console.error("Profile error details:", JSON.stringify(profileError));
         toast({
           title: "Profile creation issue",
           description: "Your account was created but there was an issue setting up your profile.",
@@ -129,6 +131,7 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
         });
       } else {
         console.log("Profile created successfully for user:", authData.user.id);
+        console.log("Profile data:", { id: authData.user.id, full_name: fullName, email });
       }
       
       // Log to verify user data is created correctly

@@ -42,7 +42,8 @@ export default function SignUp() {
       setError(null);
       setIsLoading(true);
       
-      // Log the full name to verify it's being passed correctly
+      // Add additional logging to debug
+      console.log("Form values:", values);
       console.log("Signing up with full name:", values.fullName);
       
       await signUp(values.email, values.password, values.fullName);
