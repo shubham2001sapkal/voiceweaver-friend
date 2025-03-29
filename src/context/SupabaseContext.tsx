@@ -58,14 +58,12 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { session } = await signInUser({ email, password });
+      await signInUser({ email, password });
       
       toast({
         title: "Welcome back!",
         description: "You've successfully signed in.",
       });
-      
-      return session;
     } catch (error: any) {
       toast({
         title: "Sign in failed",

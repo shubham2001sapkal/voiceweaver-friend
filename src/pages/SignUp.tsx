@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Header } from "@/components/Header";
-import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { createUser } from "@/lib/database";
+import { useSupabase } from "@/context/SupabaseContext";
 
 export default function SignUp() {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signUp, loading: authLoading } = useSupabase();
+  
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,16 +34,7 @@ export default function SignUp() {
 
     try {
       setLoading(true);
-      await createUser({
-        email,
-        password,
-        full_name: fullName
-      });
-      
-      toast({
-        title: "Account created",
-        description: "Please check your email to confirm your account.",
-      });
+      await signUp(email, password, fullName);
       navigate("/signin");
     } catch (error: any) {
       console.error("Sign up error:", error);
@@ -107,8 +98,8 @@ export default function SignUp() {
                 Password must be at least 6 characters
               </p>
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating account..." : "Sign Up"}
+            <Button type="submit" className="w-full" disabled={loading || authLoading}>
+              {loading || authLoading ? "Creating account..." : "Sign Up"}
             </Button>
           </form>
           <div className="mt-4 text-center">

@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Header } from "@/components/Header";
-import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { signInUser } from "@/lib/database";
+import { useSupabase } from "@/context/SupabaseContext";
 
 export default function SignIn() {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signIn, loading: authLoading } = useSupabase();
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,12 +28,7 @@ export default function SignIn() {
 
     try {
       setLoading(true);
-      await signInUser({ email, password });
-      
-      toast({
-        title: "Welcome back!",
-        description: "You've successfully signed in.",
-      });
+      await signIn(email, password);
       navigate("/");
     } catch (error: any) {
       console.error("Sign in error:", error);
@@ -83,8 +78,8 @@ export default function SignIn() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
+            <Button type="submit" className="w-full" disabled={loading || authLoading}>
+              {loading || authLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
           <div className="mt-4 text-center">
