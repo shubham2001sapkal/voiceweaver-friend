@@ -16,16 +16,16 @@ export default function About() {
               About Knoxed CreatiCode
             </h1>
             <p className="text-xl text-muted-foreground">
-              Empowering creativity through innovative coding solutions
+              Empowering communication through AI voice cloning technology
             </p>
           </div>
 
           <div className="prose dark:prose-invert max-w-none mb-12">
             <p className="text-lg leading-relaxed mb-6">
-              Knoxed CreatiCode is an advanced platform designed to merge creativity with coding, making technology more accessible and empowering for everyone. Our mission is to break down barriers between technical implementation and creative vision, allowing users to build powerful applications without getting lost in complex code.
+              AI voice cloning technology stands out for its profound impact on users with speech impairments, offering a powerful combination of emotional and technical benefits. By leveraging advanced AI models like Tacotron and ElevenLabs, this technology allows individuals to communicate in their own voice, even if they have lost the ability to speak.
             </p>
             <p className="text-lg leading-relaxed">
-              Whether you're a professional developer, a design enthusiast, or someone with a great idea but limited technical background, our tools and resources will help you bring your vision to life with ease and confidence.
+              This technology not only supports individuals with disabilities but also fosters inclusivity in education, media, and social interactions, making it a transformative tool for a more accessible world.
             </p>
           </div>
 
@@ -34,13 +34,13 @@ export default function About() {
               <CardHeader className="flex flex-row items-center gap-3">
                 <Info className="h-6 w-6 text-voiceback-500" />
                 <div>
-                  <CardTitle>Our Mission</CardTitle>
-                  <CardDescription>Building technology for everyone</CardDescription>
+                  <CardTitle>Empowering Communication</CardTitle>
+                  <CardDescription>Breaking barriers with natural voice</CardDescription>
                 </div>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  We believe that coding should be accessible to everyone. Our platform bridges the gap between technical knowledge and creative vision, enabling users to create applications that reflect their unique ideas without being limited by technical constraints.
+                  Enables people with speech impairments to express themselves naturally, reducing stigma and improving personal identity. Our platform enhances accessibility for all users.
                 </p>
               </CardContent>
             </Card>
@@ -49,13 +49,13 @@ export default function About() {
               <CardHeader className="flex flex-row items-center gap-3">
                 <BookOpen className="h-6 w-6 text-voiceback-500" />
                 <div>
-                  <CardTitle>Learning Approach</CardTitle>
-                  <CardDescription>Interactive and engaging</CardDescription>
+                  <CardTitle>Personalized Experience</CardTitle>
+                  <CardDescription>Customized to feel familiar</CardDescription>
                 </div>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Our platform provides not just tools, but an educational journey. Learn as you build with interactive guides, best practices, and community support that makes the development process an enriching experience for all skill levels.
+                  Offers customized voices that feel familiar and comfortable, enhancing engagement and inclusivity. Each voice is uniquely tailored to represent the individual's identity.
                 </p>
               </CardContent>
             </Card>
@@ -66,27 +66,27 @@ export default function About() {
               <CardHeader className="flex flex-row items-center gap-3">
                 <Award className="h-6 w-6 text-voiceback-500" />
                 <div>
-                  <CardTitle>Key Benefits</CardTitle>
-                  <CardDescription>Why choose Knoxed CreatiCode</CardDescription>
+                  <CardTitle>Breaking Barriers</CardTitle>
+                  <CardDescription>Multilingual content creation</CardDescription>
                 </div>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-2">
                     <span className="bg-voiceback-100 dark:bg-voiceback-900 text-voiceback-500 p-1 rounded-full mt-0.5">•</span>
-                    <span>Intuitive interface for both beginners and experts</span>
+                    <span>Facilitates multilingual content creation</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="bg-voiceback-100 dark:bg-voiceback-900 text-voiceback-500 p-1 rounded-full mt-0.5">•</span>
-                    <span>Real-time collaboration features</span>
+                    <span>Bridges language gaps across communities</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="bg-voiceback-100 dark:bg-voiceback-900 text-voiceback-500 p-1 rounded-full mt-0.5">•</span>
-                    <span>Extensive template library to jumpstart projects</span>
+                    <span>Expands global reach for all users</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="bg-voiceback-100 dark:bg-voiceback-900 text-voiceback-500 p-1 rounded-full mt-0.5">•</span>
-                    <span>Integrated testing and deployment tools</span>
+                    <span>Creates more inclusive digital experiences</span>
                   </li>
                 </ul>
               </CardContent>
@@ -96,16 +96,16 @@ export default function About() {
               <CardHeader className="flex flex-row items-center gap-3">
                 <HelpCircle className="h-6 w-6 text-voiceback-500" />
                 <div>
-                  <CardTitle>Support & Community</CardTitle>
-                  <CardDescription>You're never alone</CardDescription>
+                  <CardTitle>Technology & Support</CardTitle>
+                  <CardDescription>Advanced AI models</CardDescription>
                 </div>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-4">
-                  Join our thriving community of creators, developers, and innovators. Share ideas, get help, and collaborate on projects that matter.
+                  Our platform leverages cutting-edge AI models like Tacotron and ElevenLabs to provide natural-sounding voice synthesis for users with speech impairments.
                 </p>
                 <p className="text-muted-foreground">
-                  Our dedicated support team is always available to help you overcome any challenges you might face during your creative coding journey.
+                  We're committed to fostering inclusivity in education, media, and social interactions, making communication accessible for everyone.
                 </p>
               </CardContent>
             </Card>
