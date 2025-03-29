@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { useSupabase } from "@/context/SupabaseContext";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "@/components/ui/use-toast";
+import { TypewriterEffect } from "@/components/TypewriterEffect";
 
 const Index = () => {
   const { checkConnection } = useSupabase();
@@ -79,8 +80,11 @@ const Index = () => {
           
           <VoiceForm />
 
-          <div className="text-center mt-12 mb-6 text-base text-gray-600 dark:text-gray-400 italic">
-            "For people who lost their voice, VoiceBack restores their ability to speak using AI"
+          <div className="text-center mt-12 mb-6">
+            <TypewriterEffect 
+              text="For people who lost their voice, VoiceBack restores their ability to speak using AI" 
+              className="text-base text-gray-600 dark:text-gray-400 italic"
+            />
           </div>
         </div>
       </main>
