@@ -1,8 +1,10 @@
 
 import { useToast } from "@/hooks/use-toast";
+import { useSupabase } from "@/context/SupabaseContext";
 
 export function useVoiceStorageService(supabase: any) {
   const { toast } = useToast();
+  const { user } = useSupabase();
 
   const saveVoiceSampleToSupabase = async (blob: Blob): Promise<void> => {
     try {
@@ -38,13 +40,26 @@ export function useVoiceStorageService(supabase: any) {
             if (error) {
               if (error.code === '42501') {
                 // This is a Row Level Security error
-                toast({
-                  title: "Permission Error",
-                  description: "Unable to save voice sample due to row-level security. Please check your Supabase RLS policies.",
-                  variant: "destructive",
-                });
+                if (user) {
+                  toast({
+                    title: "Permission Error",
+                    description: "Unable to save voice sample despite being signed in. Please check your Supabase RLS policies.",
+                    variant: "destructive",
+                  });
+                } else {
+                  toast({
+                    title: "Authentication Required",
+                    description: "You need to be signed in to save voice samples, or update your RLS policies to allow anonymous access.",
+                    variant: "destructive",
+                  });
+                }
                 reject(error);
               } else {
+                toast({
+                  title: "Error Saving Voice Sample",
+                  description: error.message || "There was an error saving your voice sample.",
+                  variant: "destructive",
+                });
                 reject(error);
               }
             } else {

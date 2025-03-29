@@ -1,3 +1,4 @@
+
 import { Header } from "@/components/Header";
 import { VoiceForm } from "@/components/VoiceForm";
 import { Footer } from "@/components/Footer";
@@ -6,9 +7,10 @@ import { useEffect, useState, useRef } from "react";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Info, AlertTriangle, CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
-  const { checkConnection, supabase } = useSupabase();
+  const { checkConnection, supabase, user } = useSupabase();
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'failed'>('checking');
   const [logTableStatus, setLogTableStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
   const [rlsStatus, setRlsStatus] = useState<'checking' | 'configured' | 'not_configured'>('checking');
@@ -52,12 +54,24 @@ const Index = () => {
                 const { error: insertError } = await supabase.from('voice_logs').insert(testData);
                 
                 if (insertError && insertError.code === '42501') {
-                  setRlsStatus('not_configured');
-                  toast({
-                    title: "RLS Policies Need Configuration",
-                    description: "Row Level Security policies are blocking inserts. Configure RLS in your Supabase dashboard.",
-                    variant: "destructive",
-                  });
+                  // This is an RLS policy error
+                  if (user) {
+                    // User is signed in but still getting RLS error
+                    setRlsStatus('not_configured');
+                    toast({
+                      title: "RLS Policies Need Further Configuration",
+                      description: "You're signed in, but RLS policies are still blocking inserts. Check your Supabase dashboard.",
+                      variant: "destructive",
+                    });
+                  } else {
+                    // User is not signed in, which is expected with the current RLS policy
+                    setRlsStatus('not_configured');
+                    toast({
+                      title: "Authentication Required",
+                      description: "Anonymous access is blocked by RLS. Sign in or update RLS policies to allow anonymous access.",
+                      variant: "destructive",
+                    });
+                  }
                 } else {
                   setRlsStatus('configured');
                   toast({
@@ -96,7 +110,7 @@ const Index = () => {
     };
     
     verifyConnection();
-  }, [checkConnection, supabase]);
+  }, [checkConnection, supabase, user]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -143,7 +157,8 @@ const Index = () => {
                     <p className="text-sm">
                       RLS Policies: {
                         rlsStatus === 'checking' ? 'Checking policies...' :
-                        rlsStatus === 'configured' ? 'Correctly configured' : 'Need configuration'
+                        rlsStatus === 'configured' ? 'Correctly configured' : 
+                        user ? 'Need configuration despite being signed in' : 'Need configuration for anonymous access'
                       }
                     </p>
                   </div>
@@ -152,18 +167,36 @@ const Index = () => {
             )}
           </div>
           
-          {rlsStatus === 'not_configured' && (
+          {rlsStatus === 'not_configured' && !user && (
             <Alert className="mt-4 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
               <AlertTriangle className="h-4 w-4 text-amber-600" />
-              <AlertTitle>Action Required: Row Level Security</AlertTitle>
+              <AlertTitle>Anonymous Access Blocked by RLS</AlertTitle>
               <AlertDescription>
-                <p className="mb-2">To allow inserts, add this RLS policy in your Supabase dashboard:</p>
-                <div className="bg-slate-800 text-slate-100 p-3 rounded-md overflow-x-auto">
-                  <pre><code>CREATE POLICY "Enable insert for authenticated users only" ON "public"."voice_logs"
+                <p className="mb-2">You are currently not signed in, and the RLS policy is set to only allow authenticated users to insert records. You have two options:</p>
+                <ol className="list-decimal pl-5 mb-3 space-y-1">
+                  <li>Sign in to your account (recommended)</li>
+                  <li>Update the RLS policy to allow anonymous access using this SQL in your Supabase dashboard:</li>
+                </ol>
+                <div className="bg-slate-800 text-slate-100 p-3 rounded-md overflow-x-auto mb-3">
+                  <pre><code>CREATE POLICY "Enable insert for anonymous users" ON "public"."voice_logs"
 AS PERMISSIVE FOR INSERT
-TO authenticated
+TO anon
 WITH CHECK (true);</code></pre>
                 </div>
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {rlsStatus === 'not_configured' && user && (
+            <Alert className="mt-4 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <AlertTitle>User Authentication Issue</AlertTitle>
+              <AlertDescription>
+                <p className="mb-2">You're signed in but still unable to insert records. Check that:</p>
+                <ol className="list-decimal pl-5 mb-3 space-y-1">
+                  <li>Your RLS policy is correctly configured for the 'authenticated' role</li>
+                  <li>The session token is being properly passed in requests</li>
+                </ol>
               </AlertDescription>
             </Alert>
           )}
