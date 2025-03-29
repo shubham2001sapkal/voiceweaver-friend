@@ -11,6 +11,7 @@ interface SavedVoiceSamplesListProps {
   fetchStatus: 'idle' | 'loading' | 'success' | 'error';
   savedVoiceSamples: VoiceLogEntry[];
   onUseSample: (sample: VoiceLogEntry) => void;
+  onDownload: (sample: VoiceLogEntry) => void;
 }
 
 export function SavedVoiceSamplesList({
@@ -18,7 +19,8 @@ export function SavedVoiceSamplesList({
   toggleSavedSamples,
   fetchStatus,
   savedVoiceSamples,
-  onUseSample
+  onUseSample,
+  onDownload
 }: SavedVoiceSamplesListProps) {
   return (
     <div className="mt-4">
@@ -54,6 +56,7 @@ export function SavedVoiceSamplesList({
                   key={sample.id || index} 
                   sample={sample} 
                   onUseSample={onUseSample}
+                  onDownload={onDownload}
                 />
               ))}
             </div>

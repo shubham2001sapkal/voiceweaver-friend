@@ -95,6 +95,49 @@ export function useVoiceForm() {
     }
   };
 
+  const downloadSavedSample = (voiceLog: VoiceLogEntry) => {
+    try {
+      if (voiceLog.audio_data) {
+        const byteCharacters = atob(voiceLog.audio_data.split(',')[1]);
+        const byteNumbers = new Array(byteCharacters.length);
+        
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'audio/webm' });
+        
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `voice-sample-${new Date().getTime()}.webm`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Voice Sample Downloaded",
+          description: "Your voice sample has been downloaded.",
+        });
+      } else {
+        toast({
+          title: "Invalid Voice Sample",
+          description: "This voice sample doesn't contain audio data.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error downloading voice sample:", error);
+      toast({
+        title: "Error Downloading Voice Sample",
+        description: error.message || "There was an error downloading this voice sample.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const playAudio = (blob: Blob) => {
     const url = URL.createObjectURL(blob);
     const audio = new Audio(url);
@@ -118,6 +161,75 @@ export function useVoiceForm() {
     });
   };
 
+  const handleSynthesizeVoice = async (text: string, audioBlob: Blob) => {
+    try {
+      setIsSubmitting(true);
+      
+      // Convert blob to base64 for storage
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      
+      reader.onloadend = async () => {
+        try {
+          // The result contains the base64 encoded data
+          const base64data = reader.result as string;
+          
+          // Prepare the data to be sent to Supabase
+          const voiceLogData = {
+            text: text,
+            audio_data: base64data,
+            type: 'voice_sample'
+          };
+          
+          // Insert the voice sample record
+          const { data, error } = await supabase.from('voice_logs').insert(voiceLogData);
+
+          if (error) {
+            throw error;
+          }
+          
+          toast({
+            title: "Voice Text Saved",
+            description: "Your text and voice sample have been saved to the database.",
+            variant: "default",
+            className: "bg-green-100 border-green-400 dark:bg-green-900/20",
+          });
+          
+          // Refresh the saved voice samples list if it's visible
+          if (showSavedSamples) {
+            fetchSavedVoiceSamples();
+          }
+        } catch (error: any) {
+          console.error("Error saving synthesized voice:", error);
+          toast({
+            title: "Error Saving Voice",
+            description: error.message || "There was an error saving your synthesized voice.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsSubmitting(false);
+        }
+      };
+      
+      reader.onerror = () => {
+        setIsSubmitting(false);
+        toast({
+          title: "Error Processing Audio",
+          description: "Failed to process the audio data.",
+          variant: "destructive",
+        });
+      };
+    } catch (error: any) {
+      console.error("Error in voice synthesis:", error);
+      toast({
+        title: "Voice Synthesis Error",
+        description: error.message || "There was an error processing your request.",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+    }
+  };
+
   const toggleSavedSamples = () => {
     if (!showSavedSamples) {
       fetchSavedVoiceSamples();
@@ -138,8 +250,10 @@ export function useVoiceForm() {
     setFetchStatus,
     fetchSavedVoiceSamples,
     useSavedVoiceSample,
+    downloadSavedSample,
     playAudio,
     handleSampleReady,
-    toggleSavedSamples
+    toggleSavedSamples,
+    handleSynthesizeVoice
   };
 }

@@ -9,6 +9,7 @@ import { useVoiceForm } from "@/hooks/useVoiceForm";
 
 export function VoiceForm() {
   const {
+    isSubmitting,
     selectedSample,
     savedVoiceSamples,
     showSavedSamples,
@@ -16,7 +17,9 @@ export function VoiceForm() {
     playAudio,
     handleSampleReady,
     toggleSavedSamples,
-    useSavedVoiceSample
+    useSavedVoiceSample,
+    downloadSavedSample,
+    handleSynthesizeVoice
   } = useVoiceForm();
 
   return (
@@ -24,7 +27,7 @@ export function VoiceForm() {
       <div className="flex flex-col space-y-1.5 p-6">
         <h3 className="text-2xl font-semibold leading-none tracking-tight">Voice Cloning</h3>
         <p className="text-sm text-muted-foreground">
-          Record a voice sample to be used for cloning.
+          Record a voice sample, add text, and save it to the database.
         </p>
       </div>
 
@@ -33,7 +36,7 @@ export function VoiceForm() {
           <Info className="h-4 w-4" />
           <AlertTitle>Database Status</AlertTitle>
           <AlertDescription>
-            Voice samples will be saved to your Supabase voice_logs table. Make sure Row Level Security (RLS) policies are properly configured.
+            Voice samples and text will be saved to your Supabase voice_logs table.
           </AlertDescription>
         </Alert>
 
@@ -41,7 +44,8 @@ export function VoiceForm() {
 
         <SelectedSample 
           selectedSample={selectedSample} 
-          playAudio={playAudio} 
+          playAudio={playAudio}
+          onSynthesizeVoice={handleSynthesizeVoice}
         />
 
         <SavedVoiceSamplesList 
@@ -50,6 +54,7 @@ export function VoiceForm() {
           fetchStatus={fetchStatus}
           savedVoiceSamples={savedVoiceSamples}
           onUseSample={useSavedVoiceSample}
+          onDownload={downloadSavedSample}
         />
       </div>
     </div>
